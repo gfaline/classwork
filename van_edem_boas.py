@@ -27,7 +27,7 @@ class VanEmdeBoas:
         return x % ceil(sqrt(self.universe_size))
 
     def index(self, a, b):
-        # It will return position of key from its position in cluster b and its cluster index a.
+        # a is the cluster index. b is the index inside the cluster
         return a * ceil(sqrt(self.universe_size)) + b
         # return a * floor(sqrt(self.universe_size)) + b
 
@@ -230,6 +230,8 @@ print(b.high(2))
 print(b.high(3))
 print(b.low(2))
 print(b.low(3))
+# position in cluster b and its cluster index a
+print(b.index(0, 2))
 # VanEmdeBoas.insert(b, 14)
 # VanEmdeBoas.insert(b, 15)
 print("b: ", b)
