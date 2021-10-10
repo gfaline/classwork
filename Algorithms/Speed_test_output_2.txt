@@ -1,0 +1,60 @@
+Creating VEB Tree for 16 elements...
+Speed per insertion: 0.000025 seconds
+Speed per membership query: 0.000002 seconds
+Speed per predecessor query: 0.000013 seconds
+Speed per successor query: 0.000005 seconds
+
+Creating VEB Tree for 64 elements...
+Speed per insertion: 0.000037 seconds
+Speed per membership query: 0.000003 seconds
+Speed per predecessor query: 0.000009 seconds
+Speed per successor query: 0.000006 seconds
+
+Creating VEB Tree for 256 elements...
+Speed per insertion: 0.000028 seconds
+Speed per membership query: 0.000003 seconds
+Speed per predecessor query: 0.000010 seconds
+Speed per successor query: 0.000006 seconds
+
+Creating VEB Tree for 65536 elements...
+Speed per insertion: 0.000029 seconds
+Speed per membership query: 0.000004 seconds
+Speed per predecessor query: 0.000011 seconds
+Speed per successor query: 0.000008 seconds
+
+Creating VEB Tree for 4096 elements...
+Speed per insertion: 0.000030 seconds
+Speed per membership query: 0.000003 seconds
+Speed per predecessor query: 0.000010 seconds
+Speed per successor query: 0.000007 seconds
+
+Creating VEB Tree for 2048 elements...
+Speed per insertion: 0.000029 seconds
+Speed per membership query: 0.000002 seconds
+Speed per predecessor query: 0.000010 seconds
+Speed per successor query: 0.000008 seconds
+
+Creating VEB Tree for 16384 elements...
+Speed per insertion: 0.000032 seconds
+Speed per membership query: 0.000004 seconds
+Speed per predecessor query: 0.000010 seconds
+Speed per successor query: 0.000007 seconds
+
+Creating VEB Tree for 1024 elements...
+Speed per insertion: 0.000027 seconds
+Speed per membership query: 0.000002 seconds
+Speed per predecessor query: 0.000009 seconds
+Speed per successor query: 0.000008 seconds
+
+Creating VEB Tree for 5000 elements...
+Speed per insertion: 0.000030 seconds
+Speed per membership query: 0.000003 seconds
+Speed per predecessor query: 0.000011 seconds
+Speed per successor query: 0.000007 seconds
+
+Creating VEB Tree for 22003 elements...
+Speed per insertion: 0.000029 seconds
+Speed per membership query: 0.000003 seconds
+Speed per predecessor query: 0.000010 seconds
+Speed per successor query: 0.000008 seconds
+

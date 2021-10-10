@@ -28,8 +28,8 @@ class VanEmdeBoas:
 
     def index(self, a, b):
         # a is the cluster index. b is the index inside the cluster
-        return a * ceil(sqrt(self.universe_size)) + b
-        # return a * floor(sqrt(self.universe_size)) + b
+        # return a * ceil(sqrt(self.universe_size)) + b
+        return a * floor(sqrt(self.universe_size)) + b
 
     @staticmethod
     def minimum(vEB):
@@ -49,7 +49,11 @@ class VanEmdeBoas:
 
     # cluster of size 2 will be redundant after the addition of min and max values.
     def __init__(self, size):
-        self.universe_size = size
+        # This is a universe size limit. I cant computer higher. The next 2^2^k is 1.8e19
+        # self.universe_size = size
+        self.universe_size = 2
+        while self.universe_size <= size:
+            self.universe_size = self.universe_size * self.universe_size
         decrease = ceil(sqrt(self.universe_size))
         # self.summary = []
         self.clusters = []
@@ -128,19 +132,19 @@ class VanEmdeBoas:
         vEB.min = key
         vEB.max = key
 
-    # TODO: I am not sure this actually makes a new tree or cluster properly. There is no init called
     @staticmethod
     def insert(vEB, key):
+        # try:
         # If there is no min, both min and max are set to key
         if vEB.min is None:
             VanEmdeBoas.empty_tree_insert(vEB, key)
             return
-
         if key < vEB.min:
             temp = vEB.min
             vEB.min = key
             key = temp
         if vEB.universe_size > 2:
+            print(vEB.universe_size)
             clusters = vEB.clusters[vEB.high(key)]
             if clusters is None:
                 vEB.clusters[vEB.high(key)] = VanEmdeBoas(vEB.high(vEB.universe_size))
@@ -154,6 +158,9 @@ class VanEmdeBoas:
                 VanEmdeBoas.insert(clusters, vEB.low(key))
         if key > vEB.max:
             vEB.max = key
+        # except IndexError as e:
+        #     print("Universe ", vEB.universe_size)
+        #     print(key)
 
     @staticmethod
     def delete(vEB, key):
@@ -191,7 +198,7 @@ class VanEmdeBoas:
             return False
         if key == vEB.min or key == vEB.max:
             return True
-        if vEB.universe_size == 2:
+        if vEB.universe_size <= 2:
             return False
         return VanEmdeBoas.member(vEB.clusters[vEB.high(key)], vEB.low(key))
 
