@@ -2,7 +2,7 @@ import math
 import csv
 
 
-def bystander_model(n, temperature, altruism=.5):
+def probabilistic_bystander_model(n, temperature, altruism=.5):
     if altruism == 1:
         return 1
     if altruism >= .9 and temperature > 10:
@@ -20,6 +20,12 @@ def bystander_model(n, temperature, altruism=.5):
     return 0.001
 
 
-def probabilistic_bystander_model(n, temperature, altruism=.5):
-    if altruism == 1:
-        return 1
+def error_metric(filename):
+    sum = 0
+    entries = 0
+    f = open(filename, 'r')
+    reader = csv.DictReader(f)
+    for row in reader:
+        entries += 1
+        prediction = probabilistic_bystander_model(int(row['numberofbystanders']), int(row['ambienttemperature']))
+        outcome = int(row['saved'])
