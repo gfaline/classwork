@@ -20,7 +20,7 @@ def probabilistic_bystander_model(n, temperature, altruism=.5):
     return 0.001
 
 
-def error_metric(filename):
+def minus_log_likelihood(filename):
     sum = 0
     entries = 0
     f = open(filename, 'r')
@@ -29,3 +29,7 @@ def error_metric(filename):
         entries += 1
         prediction = probabilistic_bystander_model(int(row['numberofbystanders']), int(row['ambienttemperature']))
         outcome = int(row['saved'])
+        sum += math.log(math.abs(prediction - outcome), 10)
+
+    sum *= -1
+    return sum
