@@ -173,9 +173,11 @@ def LL_as_func_A():
             min_LL = minus_log
             min_index = i/100
     print("The min value of LL from looping as per D-I is ", min_LL, " at altruism ", min_index)
+    # This is the values for all A
     plt.plot(A, LL)
-
+    # This gradient
     #plt.plot(A, np.gradient(LL, .01))
+    # This is a 0 line
     #plt.plot(A, [0]*len(A))
     print(np.where(np.gradient(LL, .01) == 0), np.min(np.gradient(LL, .01)))
     plt.show()
