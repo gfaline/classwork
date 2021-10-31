@@ -15,8 +15,8 @@ def probabilistic_bystander_model(n, temperature, altruism=.5):
     if temperature < 10 or temperature > 150:
         return .001
     return min((altruism + temperature/100 + 1/n)/2, .999)
-    #return .84
-    #return altruism
+    # return .84
+    # return altruism
     if altruism == 1:
         return .999
     if altruism >= .9 and temperature > 10:
@@ -133,7 +133,7 @@ def minus_log_likelihood(filename, altruism=.5):
             to_add = math.log((1 - prediction), 10)
         else:
             to_add = math.log((prediction), 10)
-        #print(prediction, outcome, to_add)
+        # print(prediction, outcome, to_add)
         sum += to_add
     print("Saved: ", saved)
     print("NOt saved: ", (entries-saved))
@@ -162,12 +162,21 @@ def minus_log_likelihood(filename, altruism=.5):
 def LL_as_func_A():
     A = []
     LL = []
+    min_LL = 100000000
+    min_index = None
     for i in range(1, 100):
         A.append(i / 100)
-        LL.append(minus_log_likelihood("empirical.csv", i / 100))
+        minus_log = minus_log_likelihood("empirical.csv", i / 100)
+        LL.append(minus_log)
+        # The if statement below is for part I of D
+        if minus_log < min_LL:
+            min_LL = minus_log
+            min_index = i/100
+    print("The min value of LL from looping as per D-I is ", min_LL, " at altruism ", min_index)
     plt.plot(A, LL)
-    # plt.plot(A, np.gradient(LL, .01))
-    plt.plot(A, [0]*len(A))
+
+    #plt.plot(A, np.gradient(LL, .01))
+    #plt.plot(A, [0]*len(A))
     print(np.where(np.gradient(LL, .01) == 0), np.min(np.gradient(LL, .01)))
     plt.show()
 
@@ -179,4 +188,4 @@ error = minus_log_likelihood("group_10_falsifying_data.csv", altruism=altruism)
 print("falsifying error: ", error)
 error = minus_log_likelihood("empirical.csv", altruism=altruism)
 print("data error: ", error)
-#LL_as_func_A()
+LL_as_func_A()
