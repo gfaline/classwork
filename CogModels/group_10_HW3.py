@@ -10,9 +10,13 @@ import random
 
 
 def probabilistic_bystander_model(n, temperature, altruism=.5):
-    #return min((altruism + temperature/85 + 1/n)/2, .999)
+    if n < 1:
+        raise Exception("There cannot be fewer than one bystander.")
+    if temperature < 10 or temperature > 150:
+        return .001
+    return min((altruism + temperature/100 + 1/n)/2, .999)
     #return .84
-    return altruism
+    #return altruism
     if altruism == 1:
         return .999
     if altruism >= .9 and temperature > 10:
@@ -129,7 +133,7 @@ def minus_log_likelihood(filename, altruism=.5):
             to_add = math.log((1 - prediction), 10)
         else:
             to_add = math.log((prediction), 10)
-        print(prediction, outcome, to_add)
+        #print(prediction, outcome, to_add)
         sum += to_add
     print("Saved: ", saved)
     print("NOt saved: ", (entries-saved))
@@ -162,17 +166,17 @@ def LL_as_func_A():
         A.append(i / 100)
         LL.append(minus_log_likelihood("empirical.csv", i / 100))
     plt.plot(A, LL)
-    #plt.plot(A, np.gradient(LL, .01))
+    # plt.plot(A, np.gradient(LL, .01))
     plt.plot(A, [0]*len(A))
     print(np.where(np.gradient(LL, .01) == 0), np.min(np.gradient(LL, .01)))
     plt.show()
 
 
-
-error = minus_log_likelihood("group_10_supporting_data.csv")
+altruism = .3
+error = minus_log_likelihood("group_10_supporting_data.csv", altruism=altruism)
 print("supporting error: ", error)
-error = minus_log_likelihood("group_10_falsifying_data.csv")
+error = minus_log_likelihood("group_10_falsifying_data.csv", altruism=altruism)
 print("falsifying error: ", error)
-error = minus_log_likelihood("empirical.csv")
+error = minus_log_likelihood("empirical.csv", altruism=altruism)
 print("data error: ", error)
-LL_as_func_A()
+#LL_as_func_A()
