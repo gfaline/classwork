@@ -14,7 +14,7 @@ def probabilistic_bystander_model(n, temperature, altruism=.5):
         raise Exception("There cannot be fewer than one bystander.")
     if temperature < 10 or temperature > 150:
         return .001
-    return min((altruism + temperature/100 + 1/n)/2, .999)
+    return min((altruism + temperature/85 + 1/n)/2, .999)
     # return .84
     # return altruism
     if altruism == 1:
@@ -176,14 +176,14 @@ def LL_as_func_A():
     # This is the values for all A
     plt.plot(A, LL)
     # This gradient
-    #plt.plot(A, np.gradient(LL, .01))
+    # plt.plot(A, np.gradient(LL, .01))
     # This is a 0 line
-    #plt.plot(A, [0]*len(A))
+    # plt.plot(A, [0]*len(A))
     print(np.where(np.gradient(LL, .01) == 0), np.min(np.gradient(LL, .01)))
     plt.show()
 
 
-altruism = .3
+altruism = .5
 error = minus_log_likelihood("group_10_supporting_data.csv", altruism=altruism)
 print("supporting error: ", error)
 error = minus_log_likelihood("group_10_falsifying_data.csv", altruism=altruism)
