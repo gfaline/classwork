@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import com.supermarket.*;
 import java.lang.Math;
+import java.util.ArrayList;
 
 public class Agent extends SupermarketComponentImpl {
 
@@ -13,8 +14,10 @@ public class Agent extends SupermarketComponentImpl {
     boolean firsttime = true;
 	String state = "entry";
 	// Options are a shelf item, counter item, cart return, checkout
-	String goal = "banana";
+
+	String goal = "leek";
 	double[] goalPosition;
+	ArrayList<String> shopping_list;
 	boolean atHub = false;
 	Observation.InteractiveObject relevantObj;
     
@@ -36,41 +39,48 @@ public class Agent extends SupermarketComponentImpl {
 		System.out.println(obs.cartReturns.length + " cartReturns");
 		// print out the shopping list
 		System.out.println("Shoppping list: " + Arrays.toString(obs.players[0].shopping_list));
+		System.out.println(obs.players[0].shopping_list.getClass());
 		firsttime = false;
+		shopping_list = new ArrayList<String>(Arrays.asList(obs.players[0].shopping_list));
+		shopping_list.add(0, "cartReturn");
+		shopping_list.add(shopping_list.size() - 1, "register");
 
+		//goal = shopping_list.get(1);
+		System.out.println(goal);
 
-		if (goal.equals("checkout") || goal.equals("register")){
-			relevantObj = obs.registers[0];
-			goalPosition = relevantObj.position;
-			System.out.println("Shelf height and width: " + relevantObj.height + " " + relevantObj.width);
+	}
+	System.out.println(goal);
+
+	if (goal.equals("checkout") || goal.equals("register")){
+		relevantObj = obs.registers[0];
+		goalPosition = relevantObj.position;
+		//System.out.println("Shelf height and width: " + relevantObj.height + " " + relevantObj.width);
+	}
+
+	if (goal.equals("cartReturn")){
+		relevantObj = obs.cartReturns[0];
+		goalPosition = relevantObj.position;
+		//System.out.println("Shelf height and width: " + relevantObj.height + " " + relevantObj.width);
+	}
+
+	for (Observation.Counter ct : obs.counters){
+		if (ct.food.equals(goal)){
+			relevantObj = ct;
+			goalPosition = ct.position;
+			//System.out.println("Shelf height and width: " + ct.height + " " + ct.width);
 		}
+	}
 
-		if (goal.equals("cartReturn")){
-			relevantObj = obs.cartReturns[0];
-			goalPosition = relevantObj.position;
-			System.out.println("Shelf height and width: " + relevantObj.height + " " + relevantObj.width);
+	for(Observation.Shelf sh: obs.shelves){
+		if (sh.food.equals(goal)){
+			relevantObj = sh;
+			goalPosition = sh.position;
+			//System.out.println("Shelf height and width: " + sh.height + " " + sh.width);
 		}
+	}
 
-		for (Observation.Counter ct : obs.counters){
-			if (ct.food.equals(goal)){
-				relevantObj = ct;
-				goalPosition = ct.position;
-				System.out.println("Shelf height and width: " + ct.height + " " + ct.width);
-			}
-		}
-
-		for(Observation.Shelf sh: obs.shelves){
-			if (sh.food.equals(goal)){
-				relevantObj = sh;
-				goalPosition = sh.position;
-				System.out.println("Shelf height and width: " + sh.height + " " + sh.width);
-			}
-		}
-
-		if (relevantObj==null){
-			System.out.println("There is no target object, it will just error from here");
-		}
-
+	if (relevantObj==null){
+		System.out.println("There is no target object, it will just error from here");
 	}
 	System.out.println("Target at " + goalPosition[0] + " " + goalPosition[1]);
 
@@ -166,6 +176,16 @@ public class Agent extends SupermarketComponentImpl {
 				//System.out.println("Going west");
 			}
 		}
+		else if (!atHub){
+			// If you are here, you're in the asile hub but may not be clear of the basket. Manually move you to be out of the way of the basket.
+			if (ply.direction != 3)
+				goEast();
+			goEast();
+			goEast();
+			goEast();
+			goEast();
+			atHub = true;
+		}
 		else{
 			atHub = true;
 		}
@@ -259,14 +279,19 @@ public class Agent extends SupermarketComponentImpl {
 	}
 
 	private void goToY(Observation obs, Observation.Player ply, double targetY){
-		double ydiff = Math.abs(targetY - ply.position[1]);
-		if(ydiff > .3){
-			if (targetY > ply.position[1]){
+		double ydiff = Math.abs(targetY +  (relevantObj.height/2.0) - ply.position[1]);
+		double vol_ydiff = (targetY + (relevantObj.height/2.0)) - ply.position[1];
+		double width_diff =  (relevantObj.height/2.0) + ply.width/2.0;
+		//if(ydiff > .3 || (ply.position[1] + ply.width/2.0  > targetY + relevantObj.height/2.0 && ply.direction == 1)){
+		if(ydiff > .4 || (vol_ydiff <= .3 && vol_ydiff > 0)){
+			System.out.println("I need to move in the Y direction");
+			System.out.println("The volitile difference is " + vol_ydiff);
+			if (targetY + (relevantObj.height/2.0) > ply.position[1]){
 				if (ply.direction != 1)
 					goSouth();
 				goSouth();
 			}
-			else{
+			else if (ydiff > .4){
 				if (ply.direction != 0)
 					goNorth();
 				goNorth();
@@ -276,8 +301,9 @@ public class Agent extends SupermarketComponentImpl {
 
 	private void goToX(Observation obs, Observation.Player ply, double targetX, double targetY){
 		double xdiff = Math.abs(targetX - ply.position[0]);
-		double ydiff = Math.abs(targetY - ply.position[1]);
+		double ydiff = Math.abs(targetY + (relevantObj.height/2.0) - ply.position[1]);
 		if (ydiff < .5 && xdiff > .3){
+			System.out.println("I need to move in the X direction");
 			if (targetX > ply.position[0]){
 				if (ply.direction != 2)
 					goEast();
@@ -294,6 +320,7 @@ public class Agent extends SupermarketComponentImpl {
 	private void approachCounter(Observation obs, Observation.InteractiveObject counter, Observation.Player ply){
 		double ydiff = Math.abs(counter.position[1] - ply.position[1]);
 		if (ydiff < .35 && !counter.collision(ply, ply.position[0], ply.position[1] + .3)){
+			System.out.println("I need to approach the counter");
 			goEast();
 		}
 	}
@@ -301,17 +328,23 @@ public class Agent extends SupermarketComponentImpl {
 	private void approachRegister (Observation obs, Observation.InteractiveObject counter, Observation.Player ply){
 		double ydiff = Math.abs(counter.position[1] - ply.position[1]);
 		if (ydiff < .35 && !counter.collision(ply, ply.position[0] - .3, ply.position[1])){
+			System.out.println("I need to approach the register");
 			goWest();
 		}
 
 	}
 
 	private void approachShelf  (Observation obs, Observation.InteractiveObject counter, Observation.Player ply){
-		double ydiff = Math.abs(counter.position[1] - ply.position[1]);
+		double ydiff = Math.abs(counter.position[1] + (relevantObj.height/2.0) - ply.position[1]);
 		double xdiff = Math.abs(counter.position[0] - ply.position[0]);
-		System.out.println("Ydiff: " + ydiff + ", Xdiff: " + xdiff);
-		if (ydiff < 1.5 && xdiff < .5 && !counter.collision(ply, ply.position[0], ply.position[1] - .3)){
-			goNorth();
+		System.out.println("Xdiff: " + xdiff + ", Ydiff: " + ydiff);
+		if (ydiff < 1.5 && xdiff < .5){
+			if (!counter.collision(ply, ply.position[0], ply.position[1] - .3)){
+				goNorth();
+			}
+			System.out.println("I need to approach the shelf");
+			if (ply.direction != 0)
+				goNorth();
 			//goNorth();
 		}
 	}
@@ -336,6 +369,10 @@ public class Agent extends SupermarketComponentImpl {
 		}
 		else if (ply.direction != 1){
 			goSouth();
+		}
+
+		if(obs.atCartReturn(ply.index)){
+			toggleShoppingCart();
 		}
 	}
 
