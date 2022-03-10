@@ -283,7 +283,7 @@ public class Agent extends SupermarketComponentImpl {
 		double vol_ydiff = (targetY + (relevantObj.height/2.0)) - ply.position[1];
 		double width_diff =  (relevantObj.height/2.0) + ply.width/2.0;
 		//if(ydiff > .3 || (ply.position[1] + ply.width/2.0  > targetY + relevantObj.height/2.0 && ply.direction == 1)){
-		if(ydiff > .4 || (vol_ydiff <= .3 && vol_ydiff > 0)){
+		if(ydiff > .4 || (vol_ydiff > .06 && vol_ydiff <= .2 && vol_ydiff > 0 && ply.direction == 1)){
 			System.out.println("I need to move in the Y direction");
 			System.out.println("The volitile difference is " + vol_ydiff);
 			if (targetY + (relevantObj.height/2.0) > ply.position[1]){
