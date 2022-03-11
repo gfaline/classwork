@@ -94,6 +94,8 @@ public class Agent extends SupermarketComponentImpl {
 		double nextX = obs.players[0].position[0];
 		double nextY = obs.players[0].position[1];
 
+		System.out.println("Am I in the asile hub? " + atHub + ". And now my emperical value: " + obs.inAisleHub(obs.players[0].index));
+
 		if (goal.equals("checkout") || goal.equals("register") || goal.equals("cartReturn")) {
 			if (!atHub)
 				goToAisleHub(obs, obs.players[0]);
@@ -173,7 +175,8 @@ public class Agent extends SupermarketComponentImpl {
 				//System.out.println("Going west");
 			}
 		}
-		else if (!atHub){
+		else if (!atHub && obs.inAisleHub(ply.index)){
+			System.out.println("I am moving out of the way of the basket");
 			// If you are here, you're in the asile hub but may not be clear of the basket. Manually move you to be out of the way of the basket.
 			if (ply.direction != 3)
 				goEast();
@@ -373,11 +376,18 @@ public class Agent extends SupermarketComponentImpl {
 
 		if(obs.atCartReturn(ply.index) && !hasCart){
 			System.out.println("I am at the cart return");
+			goSouth();
 			interactWithObject();
 			hasCart = true;
 			goNorth();
 			goNorth();
 			goNorth();
+			goNorth();
+			goNorth();
+			goNorth();
+			goEast();
+			goEast();
+			goEast();
 			crossOffItem();
 		}
 	}
@@ -417,13 +427,14 @@ public class Agent extends SupermarketComponentImpl {
 		double vol_ydiff = (targetY + (relevantObj.height/2.0)) - ply.position[1];
 		double width_diff =  (relevantObj.height/2.0) + ply.width/2.0;
 
-		return (ydiff > .4 || (vol_ydiff > .06 && vol_ydiff <= .2 && vol_ydiff > 0 && ply.direction == 1));
+		return !(ydiff > .4 || (vol_ydiff > .06 && vol_ydiff <= .2 && vol_ydiff > 0 && ply.direction == 1));
 
 	}
 
 	private void crossOffItem(){
 		if (shopping_list.size() > 0) {
 			shopping_list.remove(0);
+			atHub = false;
 		}
 		if (shopping_list.size() > 0) {
 			goal = shopping_list.get(0);
