@@ -135,7 +135,7 @@ public class Agent extends SupermarketComponentImpl {
 			goToY(obs, player, relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
 			goToX(obs, player, relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
 			approachShelf(obs, relevantObj, player);
-			if (playerIsHoldingFood(player)) {
+			if (playerIsHoldingFood(player) && !playerIsHoldingCart(player)) {
 				System.out.println("here");
 				returnToCart(obs, player);
 			}
@@ -402,9 +402,34 @@ public class Agent extends SupermarketComponentImpl {
 	}
 
 	private void returnToCart(Observation obs, Observation.Player player) {
-		System.out.println(player.curr_cart);
-		Observation.Cart goal_cart = obs.carts[player.curr_cart];
-		System.out.println("Returning to cart");
+		//System.out.println(player.curr_cart);
+		//Observation.Cart goal_cart = obs.carts[player.curr_cart];
+		double ydiff = Math.abs(cartLocationY + (0.4 / 2.0) - player.position[1]);
+		double xdiff = Math.abs(cartLocationX + (0.75 / 2.0) - player.position[0]);
+		System.out.println("CLP"+cartLocationX + " " + cartLocationY );
+
+		if (!detectCollison(obs, cartLocationX, cartLocationY) && ydiff >= .2 && xdiff >= .2) {
+			System.out.println("here 5");
+			goToY(obs, player, cartLocationY);
+			goToX(obs, player, cartLocationX, cartLocationY);
+		} else if (ydiff < .2 && xdiff < .2) {
+			if (player.direction != 2) {
+				System.out.println("here 6");
+				goEast();
+			}
+			if (playerIsHoldingFood(player)) {
+				System.out.println("here 6-1");
+				interactWithObject();
+			}
+			if (!hasCart){
+				System.out.println("here 6-1");
+				toggleShoppingCart();
+			}}
+		
+
+		
+		System.out.println("I need to return to cart");
+
 	}
 
 	private void approachCartReturn(Observation obs, Observation.InteractiveObject cartReturn, Observation.Player ply){
