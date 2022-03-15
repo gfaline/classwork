@@ -286,34 +286,48 @@ public class Agent extends SupermarketComponentImpl {
 			return true;
 		}
 
-		for (Observation.InteractiveObject obj: obs.shelves){
+		for (Observation.Shelf obj: obs.shelves){
 			tempVal = obj.collision(player, x, y);
-			if(tempVal)
+			if(tempVal){
+				System.out.println("colliding with shelf " + obj.food);
 				return true;
+			}
 		}
 
-		for (Observation.InteractiveObject obj: obs.counters){
+		for (Observation.Counter obj: obs.counters){
 			tempVal = obj.collision(player, x, y);
-			if(tempVal)
+			if(tempVal){
+				System.out.println("colliding with counter " + obj.food);
 				return true;
+			}
 		}
 
-		for (Observation.InteractiveObject obj: obs.carts){
+		for (int i=0; i<obs.carts.length; i++) {
+			Observation.InteractiveObject obj = obs.carts[i];
 			tempVal = obj.collision(player, x, y);
-			if(tempVal)
+			if (playerIsHoldingCart(player) && i == player.curr_cart) {
+				tempVal = false;
+			}
+			if(tempVal){
+				System.out.println("colliding with cart");
 				return true;
+			}
 		}
 
 		for (Observation.InteractiveObject obj: obs.registers){
 			tempVal = obj.collision(player, x, y);
-			if(tempVal)
+			if(tempVal){
+				System.out.println("colliding with registers");
 				return true;
+			}
 		}
 
 		for (Observation.InteractiveObject obj: obs.cartReturns){
 			tempVal = obj.collision(player, x, y);
-			if(tempVal)
+			if(tempVal){
+				System.out.println("colliding with cart return");
 				return true;
+			}
 		}
 
 		return false;
