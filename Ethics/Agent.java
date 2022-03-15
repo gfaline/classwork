@@ -52,10 +52,10 @@ public class Agent extends SupermarketComponentImpl {
 			firsttime = false;
 			//shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
 			shopping_list = new ArrayList<String>();
-			shopping_list.add(0, "cheese wheel");
-			shopping_list.add(0, "steak");
+			//shopping_list.add(0, "cheese wheel");
+			shopping_list.add(0, "leek");
 			// shopping_list.add(0, "fish");
-			shopping_list.add(0,"prepared foods");
+			//shopping_list.add(0,"prepared foods");
 			// the name of the counter is different than the name of the food. hard-code the correction
 			for (int i=0; i < shopping_list.size(); i++) {
 				if (shopping_list.get(i).equals("fish")) {
@@ -69,8 +69,8 @@ public class Agent extends SupermarketComponentImpl {
 			//quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
 			quantity_list = new ArrayList<Integer>();
 			quantity_list.add(0, 1);
-			quantity_list.add(0, 1);
-			quantity_list.add(0, 1);
+			//quantity_list.add(0, 1);
+			//quantity_list.add(0, 1);
 			quantity_list.add(0, -1);
 			quantity_list.add(quantity_list.size(), -1);
 
@@ -214,15 +214,25 @@ public class Agent extends SupermarketComponentImpl {
 				//System.out.println("Going west");
 			}
 		}
-		else if (!atHub && obs.inAisleHub(ply.index) && ply.direction == 3){
+		else if (!atHub && obs.inAisleHub(ply.index)){
 			System.out.println("I am moving out of the way of the basket");
 			// If you are here, you're in the asile hub but may not be clear of the basket. Manually move you to be out of the way of the basket.
 			if (ply.direction != 3)
 				goEast();
-			goEast();
-			goEast();
-			goEast();
-			goEast();
+			double xChange = ply.position[0];
+			while (xChange < 4.4){
+				if (!detectCollison(obs, xChange, ply.position[1])) {
+					System.out.println("Going East to avoid baskets");
+					goEast();
+					xChange += .3;
+				}
+				else
+					System.out.println("I cannot go east to avoid the baskets. I am stuck");
+			}
+			//goEast();
+			//goEast();
+			//goEast();
+
 			atHub = true;
 		}
 		else{
