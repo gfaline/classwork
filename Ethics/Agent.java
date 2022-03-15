@@ -54,8 +54,9 @@ public class Agent extends SupermarketComponentImpl {
 			shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
 			shopping_list = new ArrayList<String>();
 			//shopping_list.add(0, "raspberry");
+			shopping_list.add(0, "milk");
 			shopping_list.add(0, "banana");
-			shopping_list.add(0, "raspberry");
+			// shopping_list.add(0, "raspberry");
 
 			// shopping_list.add(0,"prepared foods");
 			// shopping_list.add(0, "fish");
@@ -82,6 +83,19 @@ public class Agent extends SupermarketComponentImpl {
 			quantity_list.add(0, -1);
 			quantity_list.add(quantity_list.size(), -1);
 
+			if (shopping_list.get(shopping_list.size()-2).contains("milk")) {
+				if (shopping_list.size()==3) {
+					shopping_list.add(2,"swiss cheese");
+					quantity_list.add(2,0);
+				} else {
+					String temp = shopping_list.get(shopping_list.size()-3);
+					int temp_quant = quantity_list.get(shopping_list.size()-3);
+					shopping_list.set(shopping_list.size()-3, shopping_list.get(shopping_list.size()-2));
+					quantity_list.set(quantity_list.size()-3, quantity_list.get(quantity_list.size()-2));
+					shopping_list.set(shopping_list.size()-2, temp);
+					quantity_list.set(quantity_list.size()-2, temp_quant);
+				}
+			}
 			goal = shopping_list.get(0);
 			System.out.println(goal);
 			System.out.println("New Shoppping list: " + shopping_list);
@@ -920,7 +934,7 @@ public class Agent extends SupermarketComponentImpl {
 		int index_of_item = cart.contents.length-1;
 		if (!cart.contents[index_of_item].equals(item)) {
 			// you don't have any of the item
-			return false;
+			return target_quantity == 0;
 		}
 		// do you have enough of the item?
 		return cart.contents_quant[index_of_item] == target_quantity;
