@@ -57,49 +57,24 @@ public class Agent extends SupermarketComponentImpl {
 			System.out.println(player.shopping_list.getClass());
 			firsttime = false;
 			shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
-			shopping_list = new ArrayList<String>();
-			//shopping_list.add(0, "raspberry");
-			// shopping_list.add(0, "milk");
-			// shopping_list.add(0, "banana");
-			// shopping_list.add(0, "raspberry");
-
-			shopping_list.add(0,"prepared foods");
-			shopping_list.add(1, "fish");
 			for (int i=0; i < shopping_list.size(); i++) {
 				if (shopping_list.get(i).equals("fish")) {
 					shopping_list.set(i, "fresh fish"); 
 				}
 			}
-
-
 			// TODO: Add a line checking if holding cart before doing this
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
 
 			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
-			quantity_list = new ArrayList<Integer>();
-			quantity_list.add(0, 1);
-			quantity_list.add(0, 1);
-			// quantity_list.add(0, 1);
-			// quantity_list.add(0, 1);
-			//quantity_list.add(0, 1);
 			quantity_list.add(0, -1);
 			quantity_list.add(quantity_list.size(), -1);
 
 
 			String last_item = shopping_list.get(shopping_list.size()-2);
 			if (last_item.contains("milk") || last_item.equals("fresh fish") || last_item.equals("prepared foods")) {
-				// if (shopping_list.size()==3) {
-					shopping_list.add(shopping_list.size()-1,"swiss cheese");
-					quantity_list.add(quantity_list.size()-1,1);
-				// } else {
-				// 	String temp = shopping_list.get(shopping_list.size()-3);
-				// 	int temp_quant = quantity_list.get(shopping_list.size()-3);
-				// 	shopping_list.set(shopping_list.size()-3, shopping_list.get(shopping_list.size()-2));
-				// 	quantity_list.set(quantity_list.size()-3, quantity_list.get(quantity_list.size()-2));
-				// 	shopping_list.set(shopping_list.size()-2, temp);
-				// 	quantity_list.set(quantity_list.size()-2, temp_quant);
-				// }
+				shopping_list.add(shopping_list.size()-1,"swiss cheese");
+				quantity_list.add(quantity_list.size()-1,1);
 			}
 			goal = shopping_list.get(0);
 			System.out.println(goal);
