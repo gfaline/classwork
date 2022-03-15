@@ -136,8 +136,8 @@ public class Agent extends SupermarketComponentImpl {
 			goToX(obs, player, relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
 			approachShelf(obs, relevantObj, player);
 			if (playerIsHoldingFood(player) && !playerIsHoldingCart(player)) {
-				System.out.println("here");
-				returnToCart(obs, player);
+				System.out.println("I would be returning to the cart here");
+				//returnToCart(obs, player);
 			}
 		} 
 
@@ -401,7 +401,7 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 
-	private void returnToCart(Observation obs, Observation.Player player) {
+	/*private void returnToCart(Observation obs, Observation.Player player) {
 		//System.out.println(player.curr_cart);
 		//Observation.Cart goal_cart = obs.carts[player.curr_cart];
 		double ydiff = Math.abs(cartLocationY + (0.4 / 2.0) - player.position[1]);
@@ -430,7 +430,7 @@ public class Agent extends SupermarketComponentImpl {
 		
 		System.out.println("I need to return to cart");
 
-	}
+	}*/
 
 	private void approachCartReturn(Observation obs, Observation.InteractiveObject cartReturn, Observation.Player ply){
 		double ydiff = Math.abs(cartReturn.position[1] - ply.position[1]);
