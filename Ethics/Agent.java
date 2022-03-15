@@ -51,8 +51,11 @@ public class Agent extends SupermarketComponentImpl {
 			System.out.println("Shoppping list: " + Arrays.toString(player.shopping_list));
 			System.out.println(player.shopping_list.getClass());
 			firsttime = false;
-			//shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
+			shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
 			shopping_list = new ArrayList<String>();
+			//shopping_list.add(0, "raspberry");
+			shopping_list.add(0, "banana");
+			shopping_list.add(0, "raspberry");
 
 			// shopping_list.add(0,"prepared foods");
 			// shopping_list.add(0, "fish");
@@ -69,8 +72,10 @@ public class Agent extends SupermarketComponentImpl {
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
 
-			//quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
+			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
 			quantity_list = new ArrayList<Integer>();
+			quantity_list.add(0, 1);
+			quantity_list.add(0, 1);
 			quantity_list.add(0, 1);
 			quantity_list.add(0, 1);
 			//quantity_list.add(0, 1);
@@ -192,6 +197,7 @@ public class Agent extends SupermarketComponentImpl {
 				// you don't have enough of the thing that you need
 				if (!atHub && !obs.inAisle(0, getAisleIndex(relevantObj)))
 					goToAisleHub(obs, player);
+				// else
 				approachShelf(obs, relevantObj, player);
 				if (playerIsHoldingFood(player) /*&& !playerIsHoldingCart(player)*/) {
 					System.out.println("I would be returning to the cart here");
@@ -647,7 +653,7 @@ public class Agent extends SupermarketComponentImpl {
 					interactWithObject();
 					checkoutOut = true;
 				}
-				if (checkoutOut){
+				if (checkoutOut && Math.abs(register.position[1] + 1.0 - ply.position[1]) < .4){
 					System.out.println("Trying to leave");
 					double x_target = returnToCartPosition[0];
 					double y_target = returnToCartPosition[1];
@@ -682,7 +688,7 @@ public class Agent extends SupermarketComponentImpl {
 			// player is holding cart. need to navigate to the shelf
 			if (playerIsFacingWest(ply)) {
 				// park the cart on the left side of the shelf 
-				x_target = relevantObj.position[0];
+				x_target = relevantObj.position[0] - .35;
 
 			} else if (playerIsFacingEast(ply)) {
 				// park the cart on the right side of the shelf 
