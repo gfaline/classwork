@@ -17,6 +17,7 @@ public class Agent extends SupermarketComponentImpl {
 	// Options are a shelf item, counter item, cart return, checkout
 
 	String goal = "leek";
+	//string[] testingShoppingList = ["cheese wheel", "steak", "fish"];
 	int num_goal;
 	double[] goalPosition;
 	ArrayList<String> shopping_list;
@@ -49,11 +50,19 @@ public class Agent extends SupermarketComponentImpl {
 			System.out.println("Shoppping list: " + Arrays.toString(player.shopping_list));
 			System.out.println(player.shopping_list.getClass());
 			firsttime = false;
-			shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
+			//shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
+			shopping_list = new ArrayList<String>();
+			shopping_list.add(0, "cheese wheel");
+			shopping_list.add(0, "steak");
+			shopping_list.add(0, "fish");
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
 
-			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
+			//quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
+			quantity_list = new ArrayList<Integer>();
+			quantity_list.add(0, 1);
+			quantity_list.add(0, 1);
+			quantity_list.add(0, 1);
 			quantity_list.add(0, -1);
 			quantity_list.add(quantity_list.size(), -1);
 
@@ -433,7 +442,7 @@ public class Agent extends SupermarketComponentImpl {
 
 	}
 
-	private void approachShelf  (Observation obs, Observation.InteractiveObject shelf, Observation.Player ply){
+	private void approachShelf  (Observation obs, Observation.InteractiveObject shelf, Observation.Player ply) {
 		// Has it go south of the aisle
 		double x_target = relevantObj.position[0];
 		double y_target = relevantObj.position[1];
@@ -448,7 +457,7 @@ public class Agent extends SupermarketComponentImpl {
 				x_target = relevantObj.position[0] + relevantObj.width;
 			} else {
 				// park the car in the middle of the shelf (should not happen...)
-				x_target = relevantObj.position[0] + Math.ceil(relevantObj.width/2);
+				x_target = relevantObj.position[0] + Math.ceil(relevantObj.width / 2);
 			}
 			y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1;
 			returnToCartPosition = ply.position.clone();
@@ -458,8 +467,8 @@ public class Agent extends SupermarketComponentImpl {
 			// System.out.println("x_target = " + x_target);
 		} else if (!playerIsHoldingFood(ply)) {
 			// player is not holding cart. player needs to navigate to shelf to pick up item
-			x_target = relevantObj.position[0] + Math.ceil(relevantObj.width/2);
-			y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1; 
+			x_target = relevantObj.position[0] + Math.ceil(relevantObj.width / 2);
+			y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1;
 			goToY(obs, ply, y_target);
 			goToX(obs, ply, x_target, y_target);
 
@@ -468,14 +477,14 @@ public class Agent extends SupermarketComponentImpl {
 			System.out.println("I need to go to back to the cart");
 			x_target = returnToCartPosition[0];
 			y_target = returnToCartPosition[1];
-			returnToCartLocation(obs, ply, x_target, y_target);				
+			returnToCartLocation(obs, ply, x_target, y_target);
 		}
 
 		double ydiff = Math.abs(y_target - ply.position[1]);
-		double xdiff = Math.abs(x_target- ply.position[0]);
+		double xdiff = Math.abs(x_target - ply.position[0]);
 		System.out.println("Xdiff: " + xdiff + ", Ydiff: " + ydiff);
 		// if you're next to the shelf
-		if (ydiff < 1.5 && xdiff < .5){
+		if (ydiff < 1.5 && xdiff < .5) {
 			// if you're holding the cart, let go
 			if (playerIsHoldingCart(ply)) {
 				System.out.println("releasing cart");
@@ -483,11 +492,10 @@ public class Agent extends SupermarketComponentImpl {
 				returnToCartPosition = ply.position;
 				cart_index = ply.curr_cart;
 				// cart = obs.carts[ply.curr_cart];
-			}
-			else if (!playerIsHoldingCart(ply) && !playerIsHoldingFood(ply)) {
+			} else if (!playerIsHoldingCart(ply) && !playerIsHoldingFood(ply)) {
 				System.out.println("not holding cart, going to shelf");
-				goToX(obs, ply, shelf.position[0] + (relevantObj.width/2.0), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
-				if (!shelf.collision(ply, ply.position[0], ply.position[1] - .3)){
+				goToX(obs, ply, shelf.position[0] + (relevantObj.width / 2.0), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
+				if (!shelf.collision(ply, ply.position[0], ply.position[1] - .3)) {
 					// if you're still below the shelf, go up
 					goNorth();
 				} else if (ply.holding_food == null || ply.holding_food.equals("")) {
@@ -502,14 +510,15 @@ public class Agent extends SupermarketComponentImpl {
 						interactWithObject();
 						interactWithObject();
 					}
-				} 
+				}
 			} else if (playerIsHoldingFood(ply)) {
 				System.out.println("I'm holding " + ply.holding_food + " and I need to return to the cart");
-				returnToCartLocation(obs, ply, x_target, y_target);	
-							
+				returnToCartLocation(obs, ply, x_target, y_target);
+
 			}
 
 		}
+	}
 
 	private void approachCartReturn(Observation obs, Observation.InteractiveObject cartReturn, Observation.Player ply){
 		double ydiff = Math.abs(cartReturn.position[1] - ply.position[1]);
@@ -680,5 +689,4 @@ public class Agent extends SupermarketComponentImpl {
 			}
 		}
 	}
-	//I am not sure if 0 is the top or bottom aisle
 }
