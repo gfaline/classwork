@@ -136,7 +136,7 @@ public class Agent extends SupermarketComponentImpl {
 				approachCartReturn(obs, relevantObj, player);
 			}
 		} else if (relevantObj.getClass().equals(Observation.Counter.class)) {
-			System.out.println("The class equals gets a result of a counter item");
+			// System.out.println("The class equals gets a result of a counter item");
 			if (!atHub)
 				goToRearAisleHub(obs, player);
 			goToY(obs, player, goalPosition[1]);
@@ -235,10 +235,10 @@ public class Agent extends SupermarketComponentImpl {
 				double next = x + .3;
 				boolean willMoveCollide = detectCollison(obs, next, y);
 				if (willMoveCollide){
-					next = y - .3;
+					next = y + .3;
 					willMoveCollide = detectCollison(obs, x, next);
 					if (willMoveCollide){
-						next = y + .3;
+						next = y - .3;
 						willMoveCollide = detectCollison(obs, x, next);
 						if(willMoveCollide){
 							System.out.println("This is just broken at this point");
@@ -247,6 +247,7 @@ public class Agent extends SupermarketComponentImpl {
 							if (ply.direction != 0)
 								goNorth();
 							goNorth();
+							System.out.println("Going north");
 						}
 
 					}
@@ -254,20 +255,21 @@ public class Agent extends SupermarketComponentImpl {
 						if (ply.direction != 1)
 							goSouth();
 						goSouth();
-						//System.out.println("Going south");
+						System.out.println("Going south");
 					}
 				}
 				else{
 					if (ply.direction != 2)
 						goEast();
 					goEast();
+					System.out.println("Going east");
 				}
 			}
 			else{
 				if (ply.direction != 3)
 					goWest();
 				goWest();
-				//System.out.println("Going west");
+				System.out.println("Going west");
 			}
 		}
 		else{
@@ -279,7 +281,8 @@ public class Agent extends SupermarketComponentImpl {
 		boolean tempVal = false;
 		Observation.Player player = obs.players[0];
 
-		if (x > 3.9 && x < 3.5 && y > 18.5 && y < 19.0){
+		if (x > 3.5 && x < 4.0 && y > 18.5 && y < 19.0){
+			System.out.println("I think I will collide with the baskets.");
 			return true;
 		}
 
