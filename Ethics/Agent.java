@@ -1,3 +1,8 @@
+/*"Make sure that you at the beginning of the file detail who was responsible for what parts of the code"
+* Gwen Edgar: Original Navigation, Checkout, Navigation Debugging
+* Michaela Freed: Getting Items From Shelf/Counter, Navigation Debugging, Most Cartwork
+* */
+
 import java.util.Arrays;
 import com.supermarket.*;
 import java.lang.Math;
@@ -69,6 +74,8 @@ public class Agent extends SupermarketComponentImpl {
 					shopping_list.set(i, "fresh fish"); 
 				}
 			}
+
+
 			// TODO: Add a line checking if holding cart before doing this
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
