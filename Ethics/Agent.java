@@ -53,11 +53,12 @@ public class Agent extends SupermarketComponentImpl {
 			firsttime = false;
 			//shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
 			shopping_list = new ArrayList<String>();
-			shopping_list.add(0, "fish");
-			shopping_list.add(0, "milk");
 
-			// shopping_list.add(0, "fish");
 			// shopping_list.add(0,"prepared foods");
+			// shopping_list.add(0, "fish");
+			// shopping_list.add(0, "milk");
+			shopping_list.add(0,"cheese wheel");
+			shopping_list.add(1,"brie cheese");
 			// the name of the counter is different than the name of the food. hard-code the correction
 			for (int i=0; i < shopping_list.size(); i++) {
 				if (shopping_list.get(i).equals("fish")) {
@@ -72,7 +73,6 @@ public class Agent extends SupermarketComponentImpl {
 			quantity_list = new ArrayList<Integer>();
 			quantity_list.add(0, 1);
 			quantity_list.add(0, 1);
-			//quantity_list.add(0, 1);
 			//quantity_list.add(0, 1);
 			quantity_list.add(0, -1);
 			quantity_list.add(quantity_list.size(), -1);
@@ -190,7 +190,7 @@ public class Agent extends SupermarketComponentImpl {
 			//goTo aisle hub. Go to y cord - width. Go to x cord. go north/south (whichever is the one supposed to)
 			if (!playerHasItemQuantity(cart, goal)){
 				// you don't have enough of the thing that you need
-				if (!atHub)
+				if (!atHub && !obs.inAisle(0, getAisleIndex(relevantObj)))
 					goToAisleHub(obs, player);
 				approachShelf(obs, relevantObj, player);
 				if (playerIsHoldingFood(player) /*&& !playerIsHoldingCart(player)*/) {
@@ -526,7 +526,7 @@ public class Agent extends SupermarketComponentImpl {
 	}
 	
 	private void approachCounter(Observation obs, Observation.InteractiveObject counter, Observation.Player ply){
-		// Has it go south of the aisle
+		// Has it go to the east aisle hub
 		double x_target = relevantObj.position[0];
 		double y_target = relevantObj.position[1];
 		if (playerIsHoldingCart(ply)) {
@@ -792,7 +792,7 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 
-	private int getAisleIndex(Observation.Shelf shelf) {
+	private int getAisleIndex(Observation.InteractiveObject shelf) {
 		double y_position = shelf.position[1];
 		// gets the index of the aisle below a shelf
 		return (int)((y_position - 1.5)/4 + 1);
