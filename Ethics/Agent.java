@@ -54,7 +54,8 @@ public class Agent extends SupermarketComponentImpl {
 			shopping_list = new ArrayList<String>();
 			shopping_list.add(0, "cheese wheel");
 			shopping_list.add(0, "steak");
-			shopping_list.add(0, "fish");
+			shopping_list.add(0, "prepared foods");
+			// TODO: Add a line checking if holding cart before doing this
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
 
@@ -88,6 +89,7 @@ public class Agent extends SupermarketComponentImpl {
 		}
 
 		for (Observation.Counter ct : obs.counters) {
+			//System.out.println("Counter food type: ");
 			if (ct.food.equals(goal)) {
 				relevantObj = ct;
 				goalPosition = ct.position;
@@ -276,6 +278,10 @@ public class Agent extends SupermarketComponentImpl {
 	private boolean detectCollison(Observation obs, double x, double y){
 		boolean tempVal = false;
 		Observation.Player player = obs.players[0];
+
+		if (x > 3.9 && x < 3.5 && y > 18.5 && y < 19.0){
+			return true;
+		}
 
 		for (Observation.InteractiveObject obj: obs.shelves){
 			tempVal = obj.collision(player, x, y);
