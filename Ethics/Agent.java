@@ -54,7 +54,13 @@ public class Agent extends SupermarketComponentImpl {
 			shopping_list = new ArrayList<String>();
 			shopping_list.add(0, "cheese wheel");
 			shopping_list.add(0, "steak");
-			shopping_list.add(0, "prepared foods");
+			shopping_list.add(0, "fish");
+			// the name of the counter is different than the name of the food. hard-code the correction
+			for (int i=0; i < shopping_list.size(); i++) {
+				if (shopping_list.get(i).equals("fish")) {
+					shopping_list.set(i, "fresh fish"); 
+				}
+			}
 			// TODO: Add a line checking if holding cart before doing this
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
