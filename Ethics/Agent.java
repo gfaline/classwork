@@ -511,7 +511,7 @@ public class Agent extends SupermarketComponentImpl {
 
 		}
 
-	}
+	
 
 	private void approachCartReturn(Observation obs, Observation.InteractiveObject cartReturn, Observation.Player ply){
 		double ydiff = Math.abs(cartReturn.position[1] - ply.position[1]);
