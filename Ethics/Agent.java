@@ -406,10 +406,6 @@ public class Agent extends SupermarketComponentImpl {
 
 					toggleShoppingCart();
 					System.out.println("hodling cart after first toggle = " + playerIsHoldingCart(ply));
-
-					toggleShoppingCart();
-					System.out.println("hodling cart after second toggle = " + playerIsHoldingCart(ply));
-
 				}
 
 			}
