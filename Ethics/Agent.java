@@ -57,51 +57,24 @@ public class Agent extends SupermarketComponentImpl {
 			System.out.println(player.shopping_list.getClass());
 			firsttime = false;
 			shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
-			shopping_list = new ArrayList<String>();
-			//shopping_list.add(0, "raspberry");
-			shopping_list.add(0, "milk");
-			shopping_list.add(0, "banana");
-			// shopping_list.add(0, "raspberry");
-
-			// shopping_list.add(0,"prepared foods");
-			// shopping_list.add(0, "fish");
-			// shopping_list.add(0, "milk");
-			shopping_list.add(0,"cheese wheel");
-			shopping_list.add(1,"brie cheese");
-			// the name of the counter is different than the name of the food. hard-code the correction
 			for (int i=0; i < shopping_list.size(); i++) {
 				if (shopping_list.get(i).equals("fish")) {
 					shopping_list.set(i, "fresh fish"); 
 				}
 			}
-
-
 			// TODO: Add a line checking if holding cart before doing this
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
 
 			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
-			quantity_list = new ArrayList<Integer>();
-			quantity_list.add(0, 1);
-			quantity_list.add(0, 1);
-			quantity_list.add(0, 1);
-			quantity_list.add(0, 1);
-			//quantity_list.add(0, 1);
 			quantity_list.add(0, -1);
 			quantity_list.add(quantity_list.size(), -1);
 
-			if (shopping_list.get(shopping_list.size()-2).contains("milk")) {
-				if (shopping_list.size()==3) {
-					shopping_list.add(2,"swiss cheese");
-					quantity_list.add(2,0);
-				} else {
-					String temp = shopping_list.get(shopping_list.size()-3);
-					int temp_quant = quantity_list.get(shopping_list.size()-3);
-					shopping_list.set(shopping_list.size()-3, shopping_list.get(shopping_list.size()-2));
-					quantity_list.set(quantity_list.size()-3, quantity_list.get(quantity_list.size()-2));
-					shopping_list.set(shopping_list.size()-2, temp);
-					quantity_list.set(quantity_list.size()-2, temp_quant);
-				}
+
+			String last_item = shopping_list.get(shopping_list.size()-2);
+			if (last_item.contains("milk") || last_item.equals("fresh fish") || last_item.equals("prepared foods")) {
+				shopping_list.add(shopping_list.size()-1,"swiss cheese");
+				quantity_list.add(quantity_list.size()-1,1);
 			}
 			goal = shopping_list.get(0);
 			System.out.println(goal);
@@ -565,7 +538,7 @@ public class Agent extends SupermarketComponentImpl {
 
 			} else if (playerIsFacingSouth(ply)) {
 				// park the cart on the right side of the shelf 
-				y_target = relevantObj.position[1] + relevantObj.height + 0.5;
+				y_target = relevantObj.position[1] + relevantObj.height + 1;
 				System.out.println("Facing south, y_target = " + y_target);
 			} else {
 				// park the car in the middle of the counter (should not happen...)
