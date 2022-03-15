@@ -645,7 +645,7 @@ public class Agent extends SupermarketComponentImpl {
 					interactWithObject();
 					checkoutOut = true;
 				}
-				if (checkoutOut){
+				if (checkoutOut && Math.abs(register.position[1] + 1.0 - ply.position[1]) < .4){
 					System.out.println("Trying to leave");
 					double x_target = returnToCartPosition[0];
 					double y_target = returnToCartPosition[1];
