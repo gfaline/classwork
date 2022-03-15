@@ -52,12 +52,11 @@ public class Agent extends SupermarketComponentImpl {
 			firsttime = false;
 			//shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
 			shopping_list = new ArrayList<String>();
-			shopping_list.add(0, "cheese wheel");
-			shopping_list.add(0, "cheese wheel");
-			shopping_list.add(0, "brie cheese");
+			shopping_list.add(0, "fish");
+			shopping_list.add(0, "milk");
 
 			// shopping_list.add(0, "fish");
-			shopping_list.add(0,"prepared foods");
+			// shopping_list.add(0,"prepared foods");
 			// the name of the counter is different than the name of the food. hard-code the correction
 			for (int i=0; i < shopping_list.size(); i++) {
 				if (shopping_list.get(i).equals("fish")) {
@@ -70,6 +69,7 @@ public class Agent extends SupermarketComponentImpl {
 
 			//quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
 			quantity_list = new ArrayList<Integer>();
+			quantity_list.add(0, 1);
 			quantity_list.add(0, 1);
 			//quantity_list.add(0, 1);
 			//quantity_list.add(0, 1);
@@ -217,8 +217,10 @@ public class Agent extends SupermarketComponentImpl {
 		double x = ply.position[0];
 		double y = ply.position[1];
 
-		if (!obs.inAisleHub(ply.index) && !acceptableYNearness(ply)){
-			System.out.println("I am going to the aisle hub");
+		
+		// if (!obs.inAisleHub(ply.index) && !acceptableYNearness(ply) && /* not in right aisle */){
+			if (!obs.inAisleHub(ply.index) && !acceptableYNearness(ply)){
+				System.out.println("I am going to the aisle hub");
 			if (x > (4.5 - ply.width)){
 				//Check for collission on next step
 				double next = x + .3;
@@ -734,6 +736,7 @@ public class Agent extends SupermarketComponentImpl {
 		// gets the index of the aisle below a shelf
 		return (int)((y_position - 1.5)/4 + 1);
 	}
+
 
 	private void nextAisle(Observation obsv, Observation.Player ply, int dir){
 		//dir is 0 for north and 1 for south just like getdir case stuff
