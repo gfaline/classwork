@@ -205,7 +205,7 @@ public class Agent extends SupermarketComponentImpl {
 				//System.out.println("Going west");
 			}
 		}
-		else if (!atHub && obs.inAisleHub(ply.index)){
+		else if (!atHub && obs.inAisleHub(ply.index) && ply.direction == 3){
 			System.out.println("I am moving out of the way of the basket");
 			// If you are here, you're in the asile hub but may not be clear of the basket. Manually move you to be out of the way of the basket.
 			if (ply.direction != 3)
