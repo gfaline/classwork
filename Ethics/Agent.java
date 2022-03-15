@@ -23,6 +23,7 @@ public class Agent extends SupermarketComponentImpl {
 	ArrayList<String> shopping_list;
 	ArrayList<Integer> quantity_list;
 	boolean atHub = false;
+	boolean checkoutOut = false;
 	Observation.InteractiveObject relevantObj;
 
 	int cart_index = -1;
@@ -136,7 +137,10 @@ public class Agent extends SupermarketComponentImpl {
 			if (!atHub)
 				goToAisleHub(obs, player);
 			if (goal.equals("checkout") || goal.equals("register")) {
-				goToY(obs, player, goalPosition[1]);
+				if(playerIsHoldingCart(player) || checkoutOut)
+					goToY(obs, player, goalPosition[1] + 1.0);
+				else
+					goToY(obs, player, goalPosition[1]);
 				approachRegister(obs, relevantObj, player);
 			} else {
 				System.out.println(relevantObj.position[1]);
@@ -148,14 +152,10 @@ public class Agent extends SupermarketComponentImpl {
 				goToRearAisleHub(obs, player);
 			// goToY(obs, player, goalPosition[1]);
 			approachCounter(obs, relevantObj, player);
-			// if (playerIsHoldingFood(player)) {
-			// 	returnToCart(obs, player);
-			// }
-			//goToX(obs, obs.players[0], goalPosition[0]);
-			//Here we want to be inRearAisleHub or besideCounters
 		} else if (relevantObj.getClass().equals(Observation.Shelf.class)) {
 			boolean inAisle = amInAisle(obs, player);
 			//goTo aisle hub. Go to y cord - width. Go to x cord. go north/south (whichever is the one supposed to)
+			//TODO: Go to aisle hub or rear aisle hub depending on which is closer
 			if (!atHub)
 				goToAisleHub(obs, player);
 			approachShelf(obs, relevantObj, player);
@@ -565,9 +565,66 @@ public class Agent extends SupermarketComponentImpl {
 
 	private void approachRegister (Observation obs, Observation.InteractiveObject register, Observation.Player ply){
 		double ydiff = Math.abs(register.position[1] - ply.position[1]);
-		if (ydiff < .35 && !register.collision(ply, ply.position[0] - .3, ply.position[1])){
-			System.out.println("I need to approach the register");
-			goWest();
+		if (ydiff < 2.6) {
+			if (playerIsHoldingCart(ply) && !checkoutOut) {
+				System.out.println("Putting cart below register, this includes toggling it");
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goWest();
+				toggleShoppingCart();
+				returnToCartPosition = ply.position.clone();
+				goEast();
+				goEast();
+				goEast();
+				goEast();
+				goEast();
+				goEast();
+				goEast();
+				goEast();
+
+			} else {
+				//goToY(obs, ply, goalPosition[1]);
+				if (ydiff < 1.7 && !register.collision(ply, ply.position[0] - .3, ply.position[1])) {
+					System.out.println("I need to approach the register");
+					//goWest();
+					goToX(obs, ply, goalPosition[0], goalPosition[1]);
+				}
+				if (relevantObj.canInteract(ply) && !checkoutOut){
+					System.out.println("Trying to checkout");
+					interactWithObject();
+					checkoutOut = true;
+				}
+				if (checkoutOut){
+					System.out.println("Trying to leave");
+					double x_target = returnToCartPosition[0];
+					double y_target = returnToCartPosition[1];
+					returnToCartLocation(obs, ply, x_target, y_target);
+					toggleShoppingCart();
+					String[] checkedOutItems = cart.purchased_contents;
+					System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
+					String[] contents = cart.contents;
+					System.out.println("Cart Contents: " + Arrays.toString(contents));
+					/*
+					toggleShoppingCart();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();*/
+				}
+			}
 		}
 
 	}
