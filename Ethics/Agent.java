@@ -469,16 +469,16 @@ public class Agent extends SupermarketComponentImpl {
 			if (cart.direction != ply.direction) {  
 				// turn to face the cart
 				System.out.println("turning to face the cart");
-				if (cartIsFacingEast(cart)) {
+				if (isFacingEast(cart)) {
 					goEast();
 				}
-				else if (cartIsFacingWest(cart)) {
+				else if (isFacingWest(cart)) {
 					goWest();
 				}
-				if (cartIsFacingNorth(cart)) {
+				if (isFacingNorth(cart)) {
 					goNorth();
 				}
-				if (cartIsFacingSouth(cart)) {
+				if (isFacingSouth(cart)) {
 					goSouth();
 				}
 			}
@@ -527,12 +527,12 @@ public class Agent extends SupermarketComponentImpl {
 		double y_target = relevantObj.position[1];
 		if (playerIsHoldingCart(ply)) {
 			// player is holding cart. need to navigate to the counter
-			if (playerIsFacingNorth(ply)) {
+			if (isFacingNorth(ply)) {
 				// park the cart on the top side of the counter 
 				y_target = relevantObj.position[1];
 				System.out.println("Facing north, y_target = " + y_target);
 
-			} else if (playerIsFacingSouth(ply)) {
+			} else if (isFacingSouth(ply)) {
 				// park the cart on the right side of the shelf 
 				y_target = relevantObj.position[1] + relevantObj.height + 1;
 				System.out.println("Facing south, y_target = " + y_target);
@@ -674,11 +674,11 @@ public class Agent extends SupermarketComponentImpl {
 		if (playerIsHoldingCart(ply)) {
 			System.out.println("holding cart, need to navigate to correct shelf");
 			// player is holding cart. need to navigate to the shelf
-			if (playerIsFacingWest(ply)) {
+			if (isFacingWest(ply)) {
 				// park the cart on the left side of the shelf 
 				x_target = relevantObj.position[0] - .35;
 
-			} else if (playerIsFacingEast(ply)) {
+			} else if (isFacingEast(ply)) {
 				// park the cart on the right side of the shelf 
 				x_target = relevantObj.position[0] + relevantObj.width;
 			} else {
@@ -862,35 +862,35 @@ public class Agent extends SupermarketComponentImpl {
 		return player.curr_cart != -1;
 	}
 
-	private boolean playerIsFacingNorth(Observation.Player player) {
+	private boolean isFacingNorth(Observation.Player player) {
 		return player.direction == 0;
 	}
 
-	private boolean playerIsFacingSouth(Observation.Player player) {
+	private boolean isFacingSouth(Observation.Player player) {
 		return player.direction == 1;
 	}
 
-	private boolean playerIsFacingEast(Observation.Player player) {
+	private boolean isFacingEast(Observation.Player player) {
 		return player.direction == 2;
 	}
 
-	private boolean playerIsFacingWest(Observation.Player player) {
+	private boolean isFacingWest(Observation.Player player) {
 		return player.direction == 3;
 	}
 
-	private boolean cartIsFacingNorth(Observation.Cart cart) {
+	private boolean isFacingNorth(Observation.Cart cart) {
 		return cart.direction == 0;
 	}
 
-	private boolean cartIsFacingSouth(Observation.Cart cart) {
+	private boolean isFacingSouth(Observation.Cart cart) {
 		return cart.direction == 1;
 	}
 
-	private boolean cartIsFacingEast(Observation.Cart cart) {
+	private boolean isFacingEast(Observation.Cart cart) {
 		return cart.direction == 2;
 	}
 
-	private boolean cartIsFacingWest(Observation.Cart cart) {
+	private boolean isFacingWest(Observation.Cart cart) {
 		return cart.direction == 3;
 	}
 
