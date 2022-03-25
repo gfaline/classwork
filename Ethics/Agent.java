@@ -18,12 +18,10 @@ public class Agent extends SupermarketComponentImpl {
 
     boolean firsttime = true;
 	String state = "entry";
-	boolean hasCart = false;
 	// Options are a shelf item, counter item, cart return, checkout
 
 	String goal = "leek";
 	//string[] testingShoppingList = ["cheese wheel", "steak", "fish"];
-	int num_goal;
 	double[] goalPosition;
 	ArrayList<String> shopping_list;
 	ArrayList<Integer> quantity_list;
@@ -841,7 +839,6 @@ public class Agent extends SupermarketComponentImpl {
 		if (shopping_list.size() > 0) {
 			// make the next item the target
 			goal = shopping_list.get(0);
-			num_goal = quantity_list.get(0);
 		}
 		else{
 			leave();
