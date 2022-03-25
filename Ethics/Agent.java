@@ -160,21 +160,19 @@ public class Agent extends SupermarketComponentImpl {
 			//goToX(obs, obs.players[0], goalPosition[0]);
 			//Here we want to be inRearAisleHub or besideCounters
 
-			if (!playerHasItemQuantity(cart, goal)){
+			if (!playerHasItemQuantity(cart, goal)) {
 				// you don't have enough of the thing that you need
 				if (!atHub)
 					goToRearAisleHub(obs, player);
 				approachCounter(obs, relevantObj, player);
 				if (playerIsHoldingFood(player) /*&& !playerIsHoldingCart(player)*/) {
-					System.out.println("I would be returning to the cart here");
+					// System.out.println("I would be returning to the cart here");
 					// returnToCart(obs, player);
 					returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 					if (cart.canInteract(player)) {
 						// interact with cart
-						System.out.println("trying to interact with cart");
-						interactWithObject();
-						interactWithObject();
-								
+						// System.out.println("trying to interact with cart");
+						interact2x();
 					}
 				}
 			} else if (playerIsHoldingCart(player)) {
@@ -200,9 +198,7 @@ public class Agent extends SupermarketComponentImpl {
 					if (cart.canInteract(player)) {
 						// interact with cart
 						System.out.println("trying to interact with cart");
-						interactWithObject();
-						interactWithObject();
-								
+						interact2x();
 					}
 				}
 			} else if (playerIsHoldingCart(player)) {
@@ -592,9 +588,7 @@ public class Agent extends SupermarketComponentImpl {
 					}
 					if (counter.canInteract(ply)) {
 						// grab the item
-						interactWithObject();
-						interactWithObject();
-						interactWithObject();
+						interact3x();
 					}
 				} 
 			} /*else if (playerIsHoldingFood(ply)) {
@@ -739,8 +733,7 @@ public class Agent extends SupermarketComponentImpl {
 					}
 					if (shelf.canInteract(ply)) {
 						// grab the item
-						interactWithObject();
-						interactWithObject();
+						interact2x();
 					}
 				}
 			} /*else if (playerIsHoldingFood(ply)) {
@@ -902,37 +895,30 @@ public class Agent extends SupermarketComponentImpl {
 	}
 
 	private boolean playerHasItemQuantity(Observation.Cart cart, String item) {
-		// is item in cart.contents? if not, then item_quantity = 1 (because 1 thing has been put in the cart)
-		// in that case, return true, because this is only called after an item has been put in the cart
 		int target_quantity = quantity_list.get(0);
 		System.out.println("here I am! I need quantity = " + target_quantity + " of item = " + item );
 		if (cart == null || cart.contents == null || cart.contents.length == 0) {
-			System.out.println("nothing in cart");
+			// if the cart is empty, then you don't have enough of the thing
+			// System.out.println("nothing in cart");
 			return false;
 		}
-		System.out.println("something in cart");
+		// System.out.println("something in cart");
 		int index_of_item = cart.contents.length-1;
 		if (!cart.contents[index_of_item].equals(item)) {
-			// you don't have any of the item
+			// the cart's not empty, but you don't have any of the item
 			return target_quantity == 0;
 		}
-		// do you have enough of the item?
-		return cart.contents_quant[index_of_item] == target_quantity;
-		/**
-		if (target_quantity == 1 && cart.contents.length > 0) {
-			return true;
-		} 
-		else { 
-			// you need more than 1 of the item
-			if (cart.contents.length == 0) {
-				System.out.println("don't have any of these");
-				// you do not have more than 1 of the item.
-				return false;
-			} else {
-				// you ave the right amount of the item
-				int index_of_item = cart.contents.length-1;
-				return cart.contents_quant[index_of_item] + 1 == target_quantity;
-			}
-		} */
+		// the cart's not emtpy. do you have enough of the item?
+		return cart.contents_quant[index_of_item] >= target_quantity;
+	}
+
+	private void interact2x() {
+		interactWithObject();
+		interactWithObject();
+	}
+	private void interact3x() {
+		interactWithObject();
+		interactWithObject();
+		interactWithObject();
 	}
 }
