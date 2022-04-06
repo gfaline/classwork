@@ -612,6 +612,7 @@ public class Agent extends SupermarketComponentImpl {
 		if (ydiff < 2.6) {
 			if (playerIsHoldingCart(ply) && !checkoutOut) {
 				System.out.println("Putting cart below register, this includes toggling it");
+				/*goWest();
 				goWest();
 				goWest();
 				goWest();
@@ -622,18 +623,35 @@ public class Agent extends SupermarketComponentImpl {
 				goWest();
 				goWest();
 				goWest();
+				goWest();*/
 				goWest();
 				goWest();
+				goWest();
+				goWest();
+				goWest();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				goNorth();
+				toggleShoppingCart();
 				toggleShoppingCart();
 				returnToCartPosition = ply.position.clone();
+				/*goEast();
 				goEast();
 				goEast();
 				goEast();
 				goEast();
 				goEast();
 				goEast();
-				goEast();
-				goEast();
+				goEast();*/
 
 			} else {
 				//goToY(obs, ply, goalPosition[1]);
