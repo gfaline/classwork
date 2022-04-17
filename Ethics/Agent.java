@@ -1,7 +1,8 @@
 /*"Make sure that you at the beginning of the file detail who was responsible for what parts of the code"
 * Gwen Edgar: Original Navigation, Checkout, Navigation Debugging
 * Michaela Freed: Getting Items From Shelf/Counter, Navigation Debugging, Most Cartwork
-* */
+* Ray: ApproachRegister,Checkout,Leave
+*/
 
 import java.util.Arrays;
 import com.supermarket.*;
@@ -66,17 +67,17 @@ public class Agent extends SupermarketComponentImpl {
 
 			// TODO: Add a line checking if holding cart before doing this
 			//shopping_list.add(0, "cartReturn");
-			shopping_list.add(0, "register");
+			
 			shopping_list.add(0, "cartReturn");
 			
-			//shopping_list.add(shopping_list.size(), "leave");
+			shopping_list.add(shopping_list.size(), "register");
 			
 
 			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
 			quantity_list.add(0, -1);
-			quantity_list.add(0, -1);
 			
-			//quantity_list.add(quantity_list.size(), -1);
+			
+			quantity_list.add(quantity_list.size(), -1);
 
 
 			String last_item = shopping_list.get(shopping_list.size()-2);
@@ -150,10 +151,36 @@ public class Agent extends SupermarketComponentImpl {
 					if (!atHub && !obs.inAisle(0, getAisleIndex(relevantObj)))
 						goToAisleHub(obs, player);
 					approachRegister(obs, relevantObj, player);
-					
+					if (checkoutOut /*&& !playerIsHoldingCart(player)*/) {
+						System.out.println("I would be returning to the cart here");
+						// returnToCart(obs, player);
+						returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+						if (cart.canInteract(player)) {
+							// interact with cart
+							System.out.println("trying to interact with cart");
+							interactWithObject();
+							interactWithObject();
+									
+						}
+					}
+				
+				} else if (playerIsHoldingCart(player)) {
+					System.out.println("Player thinks it is holding a cart");
+					System.out.println("ready to leave");
+					//crossOffItem();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+					goWest();
+				} else {
+					returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+					toggleShoppingCart();
 				}
-				
-				
 				/*
 				if (checkoutOut && !playerIsHoldingCart(player)) {
 					System.out.println("I would be returning to the cart here (Register)");
@@ -661,8 +688,8 @@ public class Agent extends SupermarketComponentImpl {
 
 	private void approachRegister (Observation obs, Observation.InteractiveObject register, Observation.Player ply){
 		//double ydiff = Math.abs(relevantObj.position[1] - ply.position[1]);
-		double x_target = relevantObj.position[0]+1;
-		double y_target = relevantObj.position[1];
+		double x_target = relevantObj.position[0]+ 1;
+		double y_target = relevantObj.position[1]+ 1.1;
 		//if (ydiff < 2.6) {
 			//if (playerIsHoldingCart(ply)) {
 				System.out.println("Putting cart belside register, this includes toggling it");
@@ -675,7 +702,8 @@ public class Agent extends SupermarketComponentImpl {
 	
 				//} 
 
-				y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1;
+				//y_target = relevantObj.position[1] + 1.1;
+				//x_target = relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)) + 1;
 				returnToCartPosition = ply.position.clone();
 
 				goToY(obs, ply, y_target);
@@ -684,10 +712,11 @@ public class Agent extends SupermarketComponentImpl {
 
 			//} else if (!checkoutOut){
 				//player does not checkout
-				x_target = relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)) + 1;
-				y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) - 1.5;
-				goToY(obs, ply, y_target);
-				goToX(obs, ply, x_target, y_target);
+				//x_target = relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)) + 1;
+				//y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) - 1.5;
+				//goToY(obs, ply, y_target);
+				//goToX(obs, ply, x_target, y_target);
+			
 				
 			//}
 
@@ -695,7 +724,9 @@ public class Agent extends SupermarketComponentImpl {
 			double xdiff = Math.abs(x_target - ply.position[0]);
 			System.out.println("Xdiff: " + xdiff + ", Ydiff: " + ydiff);
 
-			if (ydiff < 0.7 && xdiff < .5) {
+			if (ydiff < 1.9 && xdiff < .5) {
+				System.out.println("I am in Register");
+
 				// if you're holding the cart, let it go
 				if (playerIsHoldingCart(ply)) {
 					System.out.println("releasing cart");
@@ -710,6 +741,7 @@ public class Agent extends SupermarketComponentImpl {
 				goToX(obs, ply, register.position[0] + (relevantObj.width / 2.0), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
 					if (!register.collision(ply, ply.position[0], ply.position[1] - .3)) {
 					// if you're still right to the register, go left
+					System.out.println("Go North REGISTER");
 						goNorth();
 					} else if (!checkoutOut) {
 						System.out.println("next to register, but you dont checkout yet");
@@ -723,7 +755,9 @@ public class Agent extends SupermarketComponentImpl {
 							// checkout
 							interactWithObject();
 							interactWithObject();
+							interactWithObject();
 							checkoutOut = true;
+							System.out.println("checkoutOut" + checkoutOut);
 							String[] checkedOutItems = cart.purchased_contents;
 							System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
 							String[] contents = cart.contents;
