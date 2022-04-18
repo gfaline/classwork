@@ -146,38 +146,49 @@ public class Agent extends SupermarketComponentImpl {
 				approachCartReturn(obs, relevantObj, player);
 			}
 		} else if (relevantObj.getClass().equals(Observation.Counter.class)) {
-			// System.out.println("The class equals gets a result of a counter item");
-			// if (!atHub)
-			// 	goToRearAisleHub(obs, player);
-			// // goToY(obs, player, goalPosition[1]);
-			// approachCounter(obs, relevantObj, player);
-			// if (playerIsHoldingFood(player)) {
-			// 	// returnToCart(obs, player);
-			// }
-			// if ( false/*player has enough of the thing*/){}
-			//goToX(obs, obs.players[0], goalPosition[0]);
-			//Here we want to be inRearAisleHub or besideCounters
-
 			if (!playerHasItemQuantity(cart, goal)) {
 				// you don't have enough of the thing that you need
-				if (!atHub)
+				if (!atHub) {
+					// go to the rear aisle hub
 					goToRearAisleHub(obs, player);
-				approachCounter(obs, relevantObj, player);
-				if (playerIsHoldingFood(player) /*&& !playerIsHoldingCart(player)*/) {
-					// System.out.println("I would be returning to the cart here");
-					// returnToCart(obs, player);
-					returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
-					if (cart.canInteract(player)) {
-						// interact with cart
-						// System.out.println("trying to interact with cart");
-						interact2x();
+				} else if (canApproachCounter(relevantObj, player)) {
+					System.out.println("can approach counter");
+					// you're w/in distance to be able to approach the counter
+					if (playerIsHoldingCart(player)) {
+						// let go of the cart + record where you left the cart
+						System.out.println("releasing cart");
+						toggleShoppingCart();
+						returnToCartPosition = player.position;
+						cart_index = player.curr_cart;
+					} else if (playerIsHoldingFood(player)) {
+						// return to the cart with the food
+						System.out.println("returning to cart");
+						goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+						if (cart.canInteract(player)) {
+							// interact with cart
+							System.out.println("trying to place item in cart");
+							interact2x();
+						}
+					} else if (relevantObj.canInteract(player)) {
+						// you can interact with the counter. grab the item
+						interact3x();
+ 					} else {
+						// you're not holding a cart or food and you're not close enough to interact with the counter
+						// and you can approach the counter. 
+						approachCounter(obs, relevantObj, player);
 					}
+				} else {
+					// you're not close enough to the counter. go to the counter location
+					goToCounterLocation(obs, relevantObj, player);
 				}
 			} else if (playerIsHoldingCart(player)) {
-				System.out.println("Player thinks it is holding a cart");
+				// you have enough of the thing + you're holding the cart. 
+				// so you're able to move onto the next thing. cross off an item to leave this counter
 				crossOffItem();
 			} else {
-				returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+				// you have enough of the thing + you're not holding the cart
+				// return to the cart + pick up the cart
+				goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 				toggleShoppingCart();
 			}
 		} else if (relevantObj.getClass().equals(Observation.Shelf.class)) {
@@ -190,9 +201,8 @@ public class Agent extends SupermarketComponentImpl {
 				// else
 				approachShelf(obs, relevantObj, player);
 				if (playerIsHoldingFood(player) /*&& !playerIsHoldingCart(player)*/) {
-					System.out.println("I would be returning to the cart here");
-					// returnToCart(obs, player);
-					returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+					System.out.println("I am returning to the cart here");
+					goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 					if (cart.canInteract(player)) {
 						// interact with cart
 						System.out.println("trying to interact with cart");
@@ -203,7 +213,7 @@ public class Agent extends SupermarketComponentImpl {
 				System.out.println("Player thinks it is holding a cart");
 				crossOffItem();
 			} else {
-				returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+				goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 				toggleShoppingCart();
 			}
 		} 
@@ -436,90 +446,68 @@ public class Agent extends SupermarketComponentImpl {
 		}
 	}
 
-	private void returnToCartLocation(Observation obs, Observation.Player ply, double targetX, double targetY) {
-		double xdiff = Math.abs(targetX - ply.position[0]);
-		double ydiff = Math.abs(targetY - ply.position[1]);
-		if (ydiff >= 0.1) {
-			// go to the correct y location first
-			if (targetY > ply.position[1]) {
-				if (ply.direction != 1)
-					goSouth();
-				goSouth();
+	private boolean goToLocation(Observation obs, Observation.Player player, double targetX, double targetY,
+							  double max_xdiff, double max_ydiff, boolean xFirst) {
+		double xdiff = Math.abs(targetX - player.position[0]);
+		double ydiff = Math.abs(targetY - player.position[1]);
+		if (xFirst) {
+			if (xdiff >= max_xdiff) {
+				goToX(player, targetX );
+			} else if (ydiff >= max_ydiff) {
+				goToY(player, targetY);
 			} else {
-				if (ply.direction != 0)
-					goNorth();
-				goNorth();
+				return false;
 			}
-		} else if (xdiff >= 0.1) { 
-			// go to the correct x location
-			if (targetX > ply.position[0]){
-				if (ply.direction != 2)
-					goEast();
-				goEast();
-			}
-			else {
-				if (ply.direction != 3)
-					goWest();
-				goWest();
-			}	
 		} else {
-			System.out.println("w/in threshold of cart interaction");
-			if (cart.direction != ply.direction) {  
-				// turn to face the cart
-				System.out.println("turning to face the cart");
-				if (isFacingEast(cart)) {
-					goEast();
-				}
-				else if (isFacingWest(cart)) {
-					goWest();
-				}
-				if (isFacingNorth(cart)) {
-					goNorth();
-				}
-				if (isFacingSouth(cart)) {
-					goSouth();
-				}
+			if (ydiff >= max_ydiff) {
+				goToY(player, targetY);
+			} else if (xdiff >= max_xdiff) {
+				goToX(player, targetX );
+			} else {
+				return false;
 			}
-			
+		}
+
+		return true;
+
+	}
+
+	private void goToX(Observation.Player player, double targetX ) {
+		if (isEastOf(player, targetX)) {
+			if ( !isFacingWest(player) ) 
+				goWest();
+			goWest();
+			System.out.println("I am going West");
+		} else {
+			if ( !isFacingEast(player) ) 
+				goEast();
+			goEast();
+			System.out.println("I am going East");
 		}
 	}
 
-	private void goToCounterLocation(Observation obs, Observation.Player ply, double targetX, double targetY) {
-		double xdiff = Math.abs(targetX - ply.position[0]);
-		double ydiff = Math.abs(targetY - ply.position[1]);
-		if (xdiff >= 0.8) { 
-			// go to the correct x location
-			if (targetX > ply.position[0]){
-				if (ply.direction != 2)
-					goEast();
-				goEast();
-				System.out.println("I am going East");
-			}
-			else {
-				if (ply.direction != 3)
-					goWest();
-				goWest();
-				System.out.println("I am going West");
-			}	
-		} else if (ydiff >= 0.2) {
-			// go to the correct y location first
-			if (targetY > ply.position[1]) {
-				if (ply.direction != 1)
-					goSouth();
+	private void goToY(Observation.Player player, double targetY ) {
+		if (isNorthOf(player, targetY)) {
+			if ( !isFacingSouth(player) ) 
 				goSouth();
-				System.out.println("I am going South");
-			} else {
-				if (ply.direction != 0)
-					goNorth();
-				goNorth();
-				System.out.println("I am going North");
-			}
+			goSouth();
+			System.out.println("I am going South");
 		} else {
-			System.out.println("w/in threshold of cart interaction");
+			if ( !isFacingNorth(player) ) 
+				goNorth();
+			goNorth();
+			System.out.println("I am going North");
 		}
 	}
-	
-	private void approachCounter(Observation obs, Observation.InteractiveObject counter, Observation.Player ply){
+
+	private void goToCartLocation(Observation obs, Observation.Player ply, double targetX, double targetY) {
+		if (!goToLocation(obs, ply, targetX, targetY, 0.1, 0.1, false)) {
+			System.out.println("w/in threshold of cart interaction");
+			turnToFace(cart, ply);			
+		}
+	}
+
+	private void goToCounterLocation(Observation obs, Observation.InteractiveObject counter, Observation.Player ply) {
 		// Has it go to the east aisle hub
 		double x_target = relevantObj.position[0];
 		double y_target = relevantObj.position[1];
@@ -542,60 +530,50 @@ public class Agent extends SupermarketComponentImpl {
 			x_target = relevantObj.position[0] - ply.width - 0.1;
 			returnToCartPosition = ply.position.clone();
 
-			goToCounterLocation(obs, ply, x_target, y_target);
+			goToLocation(obs, ply, x_target, y_target, 0.8, 0.2, true);
 		} else if (!playerIsHoldingFood(ply)) {
 			// player is not holding cart. player needs to navigate to counter to pick up item
 			x_target = relevantObj.position[0] - ply.width - 0.1;
 			y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1;
-			goToCounterLocation(obs, ply, x_target, y_target);
-		} /*else {
-			// player is holding food. player needs to navigate back to cart to put item back
-			System.out.println("I need to go to back to the cart");
-			x_target = returnToCartPosition[0];
-			y_target = returnToCartPosition[1];
-			returnToCartLocation(obs, ply, x_target, y_target);
-		} */
+			goToLocation(obs, ply, x_target, y_target, 0.8, 0.2, true);
+		} 
 
-		double ydiff = Math.abs(y_target - ply.position[1]);
-		double xdiff = Math.abs(x_target - ply.position[0]);
-		System.out.println("Xdiff: " + xdiff + ", Ydiff: " + ydiff);
-		// if you're next to the counter
-		if (ydiff < 1.5 && xdiff < .9) {
-			System.out.println("I am in this mysterious location");
+		
+	}
+	
+	private boolean canApproachCounter(Observation.InteractiveObject counter, Observation.Player player) {
+		double player_x = player.position[0];
+		double player_y = player.position[1];
+		double player_height = player.height;
+		double player_width = player.width;
 
-			// if you're holding the cart, let go
-			if (playerIsHoldingCart(ply)) {
-				System.out.println("releasing cart");
-				toggleShoppingCart();
-				returnToCartPosition = ply.position;
-				cart_index = ply.curr_cart;
-			} else if (!playerIsHoldingCart(ply) && !playerIsHoldingFood(ply)) {
-				System.out.println("not holding cart, going to counter");
-				goToX(obs, ply, counter.position[0] - 0.1, relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) );
-				goToY(obs, ply, relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)));
-				if (!counter.collision(ply, ply.position[0] + 0.3, ply.position[1])) {
-					// System.out.println("I am not colliding wiwth the counter");
-					// if you're still west of the counter, go east
-					goEast();
-				} else if (ply.holding_food == null || ply.holding_food.equals("")) {
-					// System.out.println("here 4");
-					// if you're at the counter and you're not holding an item yet
-					if (ply.direction != 0) {
-						// make sure you're facing the right direction
-						goEast();
-					}
-					if (counter.canInteract(ply)) {
-						// grab the item
-						interact3x();
-					}
-				} 
-			} /*else if (playerIsHoldingFood(ply)) {
-				System.out.println("I'm holding " + ply.holding_food + " and I need to return to the cart");
-				returnToCartLocation(obs, ply, x_target, y_target);
+		double target_x = counter.position[0];
+		double target_y = counter.position[1];
+		double target_height = counter.height;
+		double target_width = counter.width;
 
-			}*/
+		double east_aisle_hub_start_x = 15.5;
 
-		}
+		// System.out.println("player coordinates: (" + player_x + ", " + player_y + ")");
+		// System.out.println("player height = " + player_height + ", width = " + player_width);
+		// System.out.println("target coordinates: (" + target_x + ", " + target_y + ")");
+		// System.out.println("target height = " + target_height + ", width = " + target_width);
+
+
+		// is player in x-bounds?
+		boolean approachable =  player_x >= east_aisle_hub_start_x && // it's in the east aisle hub
+								player_x-player_width <= target_x; // it's west of the shelf
+
+		// is player in y-bounds?
+		approachable =  approachable && 
+						player_y-player_height >= target_y && // it's south of the top of the counter
+						player_y+player_height <= target_y + target_height - 0.3; // it's north of the bottom of the counter
+
+		return approachable;
+	}
+
+	private void approachCounter(Observation obs, Observation.InteractiveObject counter, Observation.Player ply){
+		goEast();
 		 
 	}
 
@@ -643,7 +621,7 @@ public class Agent extends SupermarketComponentImpl {
 					System.out.println("Trying to leave");
 					double x_target = returnToCartPosition[0];
 					double y_target = returnToCartPosition[1];
-					returnToCartLocation(obs, ply, x_target, y_target);
+					goToCartLocation(obs, ply, x_target, y_target);
 					toggleShoppingCart();
 					String[] checkedOutItems = cart.purchased_contents;
 					System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
@@ -725,7 +703,7 @@ public class Agent extends SupermarketComponentImpl {
 				} else if (ply.holding_food == null || ply.holding_food.equals("")) {
 					System.out.println("here 4");
 					// if you're at the shelf and you're not holding an item yet
-					if (ply.direction != 0) {
+					if (!isFacingNorth(ply)) {
 						// make sure you're facing the right direction
 						goNorth();
 					}
@@ -747,21 +725,21 @@ public class Agent extends SupermarketComponentImpl {
 		double ydiff = Math.abs(cartReturn.position[1] - ply.position[1]);
 		double xdiff = Math.abs(cartReturn.position[0] - ply.position[0]);
 		if (obs.northOfCartReturn(ply.index)){
-			if(ply.direction != 1)
+			if(!isFacingSouth(ply))
 				goSouth();
 			goSouth();
 		}
 		else if (obs.southOfCartReturn(ply.index)){
-			if (ply.direction != 0)
+			if (!isFacingNorth(ply))
 				goNorth();
 			goNorth();
 		}
 		else if (xdiff > .35 && !cartReturn.collision(ply, ply.position[0] - .3, ply.position[1])){
-			if (ply.direction !=2)
+			if (!isFacingWest(ply))
 				goWest();
 			goWest();
 		}
-		else if (ply.direction != 1){
+		else if (!isFacingSouth(ply)){
 			goSouth();
 		}
 
@@ -788,7 +766,6 @@ public class Agent extends SupermarketComponentImpl {
 		// gets the index of the aisle below a shelf
 		return (int)((y_position - 1.5)/4 + 1);
 	}
-
 
 	private void nextAisle(Observation obsv, Observation.Player ply, int dir){
 		//dir is 0 for north and 1 for south just like getdir case stuff
@@ -889,6 +866,53 @@ public class Agent extends SupermarketComponentImpl {
 
 	private boolean isFacingWest(Observation.Cart cart) {
 		return cart.direction == 3;
+	}
+
+	private boolean isEastOf(Observation.Player player, double targetX ) {
+		// is player East of targetY?
+		return targetX < player.position[0];
+	}
+
+	private boolean isWestOf(Observation.Player player, double targetX ) {
+		// is player West of targetY?
+		return targetX > player.position[0];
+	}
+
+	private boolean isNorthOf(Observation.Player player, double targetY ) {
+		// is player North of targetY?
+		return targetY > player.position[1];
+	}
+
+	private boolean isSouthOf(Observation.Player player, double targetY ) {
+		// is player South of targetY?
+		return targetY < player.position[1];
+	}
+
+	private boolean isAtX(Observation.Player player, double targetX ) {
+		return 0.15 > Math.abs(player.position[0] - targetX);
+	}
+
+	private boolean isAtY(Observation.Player player, double targetY ) {
+		return 0.15 > Math.abs(player.position[1] - targetY);
+	}
+
+	private void turnToFace(Observation.Cart cart, Observation.Player ply) {
+		if (cart.direction != ply.direction) {  
+			// turn to face the cart
+			System.out.println("turning to face the cart");
+			if (isFacingEast(cart)) {
+				goEast();
+			}
+			else if (isFacingWest(cart)) {
+				goWest();
+			}
+			if (isFacingNorth(cart)) {
+				goNorth();
+			}
+			if (isFacingSouth(cart)) {
+				goSouth();
+			}
+		}
 	}
 
 	private boolean playerHasItemQuantity(Observation.Cart cart, String item) {
