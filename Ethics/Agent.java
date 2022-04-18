@@ -9,6 +9,9 @@ import java.lang.Math;
 import java.util.ArrayList;
 
 public class Agent extends SupermarketComponentImpl {
+	// WrongShelfNorm covered since we never put anything back
+	//WallCollisionNorm covered by not going further right than the rear + counters or further right than the
+	// asile hub or register other than leaving
 
     public Agent() {
 	super();
@@ -53,20 +56,32 @@ public class Agent extends SupermarketComponentImpl {
 			System.out.println(obs.registers.length + " registers");
 			System.out.println(obs.cartReturns.length + " cartReturns");
 			// print out the shopping list
-			System.out.println("Shoppping list: " + Arrays.toString(player.shopping_list));
+			System.out.println("Shopping list: " + Arrays.toString(player.shopping_list));
 			System.out.println(player.shopping_list.getClass());
 			firsttime = false;
-			shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
+			/*shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
 			for (int i=0; i < shopping_list.size(); i++) {
 				if (shopping_list.get(i).equals("fish")) {
 					shopping_list.set(i, "fresh fish"); 
 				}
-			}
+			}*/
 			// TODO: Add a line checking if holding cart before doing this
+			shopping_list = new ArrayList<String>();
+			shopping_list.add(0, "brie cheese");
+			shopping_list.add(0, "avocado");
+			shopping_list.add(0, "chocolate milk");
+			shopping_list.add(0, "raspberry");
+			shopping_list.add(0, "garlic");
 			shopping_list.add(0, "cartReturn");
 			shopping_list.add(shopping_list.size(), "register");
 
-			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
+			//quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
+			quantity_list = new ArrayList<Integer>();
+			quantity_list.add(0, 1);
+			quantity_list.add(0, 2);
+			quantity_list.add(0, 1);
+			quantity_list.add(0, 1);
+			quantity_list.add(0, 1);
 			quantity_list.add(0, -1);
 			quantity_list.add(quantity_list.size(), -1);
 
@@ -349,6 +364,8 @@ public class Agent extends SupermarketComponentImpl {
 		boolean tempVal = false;
 		Observation.Player player = obs.players[0];
 
+		// Up until the next comment, these all cover the ObjectCollisionNorm
+
 		if (x > 3.5 && x < 4.0 && y > 18.5 && y < 19.0){
 			System.out.println("I think I will collide with the baskets.");
 			return true;
@@ -395,6 +412,24 @@ public class Agent extends SupermarketComponentImpl {
 			if(tempVal){
 				System.out.println("colliding with cart return");
 				return true;
+			}
+		}
+
+		// PersonalSpaceNorm, keeps player from entering unit of 1, if both players take step, it will be in range
+		// So they need to be 1.15 away.
+		// PlayerCollisionNorm If we follow the PersonalSpaceNorm, you cannot collide
+		for (Observation.Player current_player: obs.players){
+			// Yes, this is meant to check for the same object
+			if (!(player == current_player)){
+				double player_x = player.position[0];
+				double player_y = player.position[1];
+				double curr_x = current_player.position[0];
+				double curr_y = current_player.position[1];
+				double x_diff = Math.abs(player_x - curr_x);
+				double y_diff = Math.abs(player_y - curr_y);
+
+				if (x_diff <= 1.15 || y_diff <= 1.15)
+					return true;
 			}
 		}
 
@@ -546,6 +581,7 @@ public class Agent extends SupermarketComponentImpl {
 				System.out.println("I shouldn't be here, but y_target = " + y_target);
 			}
 			x_target = relevantObj.position[0] - ply.width - 0.1;
+			// CartTheftNorm - we save where we left the cart and return to that cart.
 			returnToCartPosition = ply.position.clone();
 
 			goToCounterLocation(obs, ply, x_target, y_target);
@@ -573,6 +609,7 @@ public class Agent extends SupermarketComponentImpl {
 			if (playerIsHoldingCart(ply)) {
 				System.out.println("releasing cart");
 				toggleShoppingCart();
+				// CartTheftNorm - we save where we left the cart and return to that cart.
 				returnToCartPosition = ply.position;
 				cart_index = ply.curr_cart;
 			} else if (!playerIsHoldingCart(ply) && !playerIsHoldingFood(ply)) {
@@ -592,6 +629,7 @@ public class Agent extends SupermarketComponentImpl {
 					}
 					if (counter.canInteract(ply)) {
 						// grab the item
+						// InteractionCancellationNorm Interacting three times to get the item
 						interactWithObject();
 						interactWithObject();
 						interactWithObject();
@@ -625,6 +663,7 @@ public class Agent extends SupermarketComponentImpl {
 				goWest();
 				goWest();
 				toggleShoppingCart();
+				// CartTheftNorm - we save where we left the cart and return to that cart.
 				returnToCartPosition = ply.position.clone();
 				goEast();
 				goEast();
@@ -644,6 +683,7 @@ public class Agent extends SupermarketComponentImpl {
 				}
 				if (relevantObj.canInteract(ply) && !checkoutOut){
 					System.out.println("Trying to checkout");
+					// ShopliftingNorm checkoutOut false until we buy things.
 					interactWithObject();
 					checkoutOut = true;
 				}
@@ -739,6 +779,7 @@ public class Agent extends SupermarketComponentImpl {
 					}
 					if (shelf.canInteract(ply)) {
 						// grab the item
+						// InteractionCancellationNorm Interacting two times to get the item
 						interactWithObject();
 						interactWithObject();
 					}
@@ -777,6 +818,7 @@ public class Agent extends SupermarketComponentImpl {
 		if(obs.atCartReturn(ply.index) && !playerIsHoldingCart(ply)){
 			System.out.println("I am at the cart return");
 			goSouth();
+			// OneCartOnlyNorm we only take one cart and never return to this function as it is crossed off the list
 			interactWithObject();
 			hasCart = true;
 			goNorth();
