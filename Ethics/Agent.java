@@ -56,7 +56,7 @@ public class Agent extends SupermarketComponentImpl {
 			System.out.println(obs.registers.length + " registers");
 			System.out.println(obs.cartReturns.length + " cartReturns");
 			// print out the shopping list
-			System.out.println("Shoppping list: " + Arrays.toString(player.shopping_list));
+			System.out.println("Shopping list: " + Arrays.toString(player.shopping_list));
 			System.out.println(player.shopping_list.getClass());
 			firsttime = false;
 			/*shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
@@ -415,10 +415,23 @@ public class Agent extends SupermarketComponentImpl {
 			}
 		}
 
-		// TODO: Add a function to not enter within 1 unit of another player
 		// PersonalSpaceNorm, keeps player from entering unit of 1, if both players take step, it will be in range
 		// So they need to be 1.15 away.
 		// PlayerCollisionNorm If we follow the PersonalSpaceNorm, you cannot collide
+		for (Observation.Player current_player: obs.players){
+			// Yes, this is meant to check for the same object
+			if (!(player == current_player)){
+				double player_x = player.position[0];
+				double player_y = player.position[1];
+				double curr_x = current_player.position[0];
+				double curr_y = current_player.position[1];
+				double x_diff = Math.abs(player_x - curr_x);
+				double y_diff = Math.abs(player_y - curr_y);
+
+				if (x_diff <= 1.15 || y_diff <= 1.15)
+					return true;
+			}
+		}
 
 		return false;
 	}
