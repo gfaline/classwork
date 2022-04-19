@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class Agent extends SupermarketComponentImpl {
 	// WrongShelfNorm covered since we never put anything back
-	//WallCollisionNorm covered by not going further right/east than the rear aisle hub + counters or further left/west than the
+	// WallCollisionNorm covered by not going further right/east than the rear aisle hub + counters or further left/west than the
 	// asile hub or register other than leaving
 
     public Agent() {
@@ -32,6 +32,8 @@ public class Agent extends SupermarketComponentImpl {
 	boolean atHub = false;
 	boolean checkoutOut = false;
 	Observation.InteractiveObject relevantObj;
+	String[] checkedOutItems = cart.purchased_contents;
+	String[] contents = cart.contents;
 
 	int cart_index = -1;
 	// CartTheftNorm - whenever we let go of the cart, we save where we left the cart and return to that cart.
@@ -155,7 +157,6 @@ public class Agent extends SupermarketComponentImpl {
 					approachRegister(obs, relevantObj, player);
 					if (checkoutOut /*&& !playerIsHoldingCart(player)*/) {
 						System.out.println("I would be returning to the cart here");
-						// returnToCart(obs, player);
 						goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 						if (cart.canInteract(player)) {
 							// interact with cart
@@ -166,10 +167,10 @@ public class Agent extends SupermarketComponentImpl {
 						}
 					}
 				
-				} else if (playerIsHoldingCart(player)) {
+				} else if (playerIsHoldingCart(player) && checkoutOut && !(checkedOutItems == null || checkedOutItems.equals(""))) {
 					System.out.println("Player thinks it is holding a cart");
 					System.out.println("ready to leave");
-					//crossOffItem();
+					// ShopliftingNorm: enforced by leaving before checkout and checkedout items are not empty
 					// EntranceOnlyNorm: enforced implicitly by only leaving through Exit and never leaving through Entrance
 					// BlockingExitNorm: enforced by going West until the player leaves the simulation. Player does not stop in front of exit
 					goWest();
@@ -185,22 +186,6 @@ public class Agent extends SupermarketComponentImpl {
 					goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 					toggleShoppingCart();
 				}
-				/*
-				if (checkoutOut && !playerIsHoldingCart(player)) {
-					System.out.println("I would be returning to the cart here (Register)");
-					
-					returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
-					if (cart.canInteract(player)) {
-						// interact with cart
-						System.out.println("trying to interact with cart");
-						interactWithObject();
-						interactWithObject();
-								
-					}
-				} else{
-					goWest();
-				}
-				*/
 				
 			} else{
 				System.out.println(relevantObj.position[1]);
@@ -225,6 +210,7 @@ public class Agent extends SupermarketComponentImpl {
 						}
 						System.out.println("releasing cart");
 						toggleShoppingCart();
+						// CartTheftNorm - we save where we left the cart and return to that cart.
 						returnToCartPosition = player.position;
 						cart_index = player.curr_cart;
 					} else if (playerIsHoldingFood(player)) {
@@ -277,6 +263,7 @@ public class Agent extends SupermarketComponentImpl {
 						// let go of the cart + record where you left the cart
 						System.out.println("releasing cart");
 						toggleShoppingCart();
+						// CartTheftNorm - we save where we left the cart and return to that cart.
 						returnToCartPosition = player.position.clone();
 						cart_index = player.curr_cart;
 					} else if (playerIsHoldingFood(player) ) {
@@ -308,29 +295,6 @@ public class Agent extends SupermarketComponentImpl {
 				toggleShoppingCart();
 			}
 		} 
-		
-		/*
-		else{
-			if (!atHub)
-				goToAisleHub(obs, player);
-			if (hasCart && checkoutOut) {
-				System.out.println("return the cart before leaving");
-				approachCartReturn(obs, relevantObj, player);
-				hasCart = false;
-			} else if (!hasCart && checkoutOut) {
-				if (player.position[1]-7.1 > -0.15 && player.position[1]-7.1 < 0.15 ) {
-					System.out.println("Leave");
-					goWest();
-				}else if (player.position[1]-7.1 >= 0.15){
-					goNorth();
-				}else if (player.position[1]-7.1 <= -0.15) {
-					goSouth();
-				}
-				
-			}
-			
-		}
-		*/
 
 		
 		// System.out.println("here I am! Leaving the main loop!!!");
@@ -739,67 +703,44 @@ public class Agent extends SupermarketComponentImpl {
 	}
 
 	private void approachRegister (Observation obs, Observation.InteractiveObject register, Observation.Player ply){
-		//double ydiff = Math.abs(relevantObj.position[1] - ply.position[1]);
 		double x_target = relevantObj.position[0]+ 1;
 		double y_target = relevantObj.position[1]+ 1.1;
-		//if (ydiff < 2.6) {
-			//if (playerIsHoldingCart(ply)) {
-				System.out.println("Putting cart belside register, this includes toggling it");
-				//if (playerIsFacingNorth(ply)) {
-				//	y_target = register.position[0] - .35;
-				//}
-				//if (playerIsFacingWest(ply)) {
-					// park the cart on the left side of the register 
-				//	x_target = relevantObj.position[0] - .35;
-	
-				//} 
 
-				//y_target = relevantObj.position[1] + 1.1;
-				//x_target = relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)) + 1;
+		System.out.println("Putting cart belside register, this includes toggling it");
+		// CartTheftNorm - we save where we left the cart and return to that cart.
+		returnToCartPosition = ply.position.clone();
+
+		// UnattendedCartNorm: enforced by controlling disctance bewtween cart parking place and register is not over 2 units.
+		goToY(obs, ply, y_target);
+		goToX(obs, ply, x_target, y_target);
+				
+
+		double ydiff = Math.abs(y_target - ply.position[1]);
+		double xdiff = Math.abs(x_target - ply.position[0]);
+		System.out.println("Xdiff: " + xdiff + ", Ydiff: " + ydiff);
+
+		if (ydiff < 1.9 && xdiff < .5) {
+			System.out.println("I am in Register");
+
+			// if you're holding the cart, let it go
+			if (playerIsHoldingCart(ply)) {
+				System.out.println("releasing cart");
+				toggleShoppingCart();
 				// CartTheftNorm - we save where we left the cart and return to that cart.
 				returnToCartPosition = ply.position.clone();
-
-				goToY(obs, ply, y_target);
-				goToX(obs, ply, x_target, y_target);
+				cart_index = ply.curr_cart;
 				
-
-			//} else if (!checkoutOut){
-				//player does not checkout
-				//x_target = relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)) + 1;
-				//y_target = relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) - 1.5;
-				//goToY(obs, ply, y_target);
-				//goToX(obs, ply, x_target, y_target);
-			
 				
-			//}
-
-			double ydiff = Math.abs(y_target - ply.position[1]);
-			double xdiff = Math.abs(x_target - ply.position[0]);
-			System.out.println("Xdiff: " + xdiff + ", Ydiff: " + ydiff);
-
-			if (ydiff < 1.9 && xdiff < .5) {
-				System.out.println("I am in Register");
-
-				// if you're holding the cart, let it go
-				if (playerIsHoldingCart(ply)) {
-					System.out.println("releasing cart");
-					toggleShoppingCart();
-					// CartTheftNorm - we save where we left the cart and return to that cart.
-					returnToCartPosition = ply.position.clone();
-					cart_index = ply.curr_cart;
-					// cart = obs.carts[ply.curr_cart];
-				
-				}else if (!playerIsHoldingCart(ply) && !checkoutOut) {
+			}else if (!playerIsHoldingCart(ply) && !checkoutOut) {
 				System.out.println("not holding cart, going to register");
-				//goToY(obs, ply, relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
 				goToX(obs, ply, register.position[0] + (relevantObj.width / 2.0), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
 					if (!register.collision(ply, ply.position[0], ply.position[1] - .3)) {
-					// if you're still right to the register, go left
-					System.out.println("Go North REGISTER");
+					// if you're still below to the register, go north
+					System.out.println("Go North to REGISTER");
 						goNorth();
 					} else if (!checkoutOut) {
 						System.out.println("next to register, but you dont checkout yet");
-						// if you're at the shelf and you're not holding an item yet
+						// if you're at the register and you're not holding an item yet
 						if (ply.direction != 0) {
 						// make sure you're facing the right direction
 							goNorth();
@@ -813,11 +754,12 @@ public class Agent extends SupermarketComponentImpl {
 							interactWithObject();
 							interactWithObject();
 							checkoutOut = true;
-							System.out.println("checkoutOut" + checkoutOut);
+							System.out.println("checkoutOut: " + checkoutOut);
 							String[] checkedOutItems = cart.purchased_contents;
 							System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
 							String[] contents = cart.contents;
 							System.out.println("Cart Contents: " + Arrays.toString(contents));
+							!(contents == null || contents.equals("")
 						}
 
 					}
@@ -829,7 +771,6 @@ public class Agent extends SupermarketComponentImpl {
 
 	private void approachShelf  (Observation obs, Observation.InteractiveObject shelf, Observation.Player ply) {
 		// Has it go south of the aisle
-
 		goNorth();
 	}
 
@@ -1083,4 +1024,3 @@ public class Agent extends SupermarketComponentImpl {
 		interactWithObject();
 	}
 }
-
