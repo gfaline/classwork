@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class Agent extends SupermarketComponentImpl {
 	// WrongShelfNorm covered since we never put anything back
-	//WallCollisionNorm covered by not going further right than the rear + counters or further right than the
+	//WallCollisionNorm covered by not going further right/east than the rear aisle hub + counters or further left/west than the
 	// asile hub or register other than leaving
 
     public Agent() {
@@ -34,6 +34,7 @@ public class Agent extends SupermarketComponentImpl {
 	Observation.InteractiveObject relevantObj;
 
 	int cart_index = -1;
+	// CartTheftNorm - whenever we let go of the cart, we save where we left the cart and return to that cart.
 	double[] returnToCartPosition;
 	Observation.Cart cart;
 
@@ -169,6 +170,8 @@ public class Agent extends SupermarketComponentImpl {
 					System.out.println("Player thinks it is holding a cart");
 					System.out.println("ready to leave");
 					//crossOffItem();
+					// EntranceOnlyNorm: enforced implicitly by only leaving through Exit and never leaving through Entrance
+					// BlockingExitNorm: enforced by going West until the player leaves the simulation. Player does not stop in front of exit
 					goWest();
 					goWest();
 					goWest();
@@ -210,8 +213,11 @@ public class Agent extends SupermarketComponentImpl {
 					// go to the rear aisle hub
 					goToRearAisleHub(obs, player);
 				} else if (canApproachCounter(relevantObj, player)) {
+					// UnattendedCartNorm: enforced by only approaching counter when player is within 2 units of counter.
+					// full aproach counter action sequence consists of 1. release cart, 2. walk to counter, 3. interact with counter (3x), 
+					// 4. return to cart, 5. place item back in cart. Since player is within 2 units of counter when the interaction starts, 
+					// the player will not be too far from the cart
 					System.out.println("can approach counter");
-					// you're w/in distance to be able to approach the counter
 					if (playerIsHoldingCart(player)) {
 						// let go of the cart + record where you left the cart
 						System.out.println("releasing cart");
@@ -229,6 +235,8 @@ public class Agent extends SupermarketComponentImpl {
 						}
 					} else if (relevantObj.canInteract(player)) {
 						// you can interact with the counter. grab the item
+						// InteractionCancellationNorm: enforced by explicity interacting with the counter 3x without cancelling interaction,
+						// so player does not have option to not obtain food
 						interact3x();
  					} else {
 						// you're not holding a cart or food and you're not close enough to interact with the counter
@@ -257,6 +265,10 @@ public class Agent extends SupermarketComponentImpl {
 				if (!atHub && !obs.inAisle(0, getAisleIndex(relevantObj))) {
 					goToAisleHub(obs, player);
 				} else if (canApproachShelf(obs, relevantObj, player)) {
+					// UnattendedCartNorm: (same as in counter) enforced by only approaching shelf when player is within 2 units of shelf.
+					// full aproach shelf action sequence consists of 1. release cart, 2. walk to shelf, 3. interact with shelf (3x), 
+					// 4. return to cart, 5. place item back in cart. Since player is within 2 units of shelf when the interaction starts, 
+					// the player will not be too far from the cart
 					System.out.println("Can approach shelf");
 					if (playerIsHoldingCart(player)) {
 						// let go of the cart + record where you left the cart
@@ -681,6 +693,7 @@ public class Agent extends SupermarketComponentImpl {
 				x_target = shelf.position[0] + Math.ceil(shelf.width / 2);
 			}
 			y_target = shelf.position[1] + shelf.height + .3;
+			// CartTheftNorm - we save where we left the cart and return to that cart.
 			returnToCartPosition = player.position.clone();
 			goToLocation(obs, player, x_target, y_target, 0.5, 0.15, false);
 		} 
@@ -740,6 +753,7 @@ public class Agent extends SupermarketComponentImpl {
 
 				//y_target = relevantObj.position[1] + 1.1;
 				//x_target = relevantObj.position[0] + (Math.ceil(relevantObj.width / 2)) + 1;
+				// CartTheftNorm - we save where we left the cart and return to that cart.
 				returnToCartPosition = ply.position.clone();
 
 				goToY(obs, ply, y_target);
@@ -767,7 +781,8 @@ public class Agent extends SupermarketComponentImpl {
 				if (playerIsHoldingCart(ply)) {
 					System.out.println("releasing cart");
 					toggleShoppingCart();
-					returnToCartPosition = ply.position;
+					// CartTheftNorm - we save where we left the cart and return to that cart.
+					returnToCartPosition = ply.position.clone();
 					cart_index = ply.curr_cart;
 					// cart = obs.carts[ply.curr_cart];
 				
@@ -789,6 +804,8 @@ public class Agent extends SupermarketComponentImpl {
 
 						if (register.canInteract(ply)) {
 							// checkout
+							// InteractionCancellationNorm: enforced by explicity interacting with the register 3x without cancelling interaction,
+							// so player does not have option to not finish the interaction 
 							interactWithObject();
 							interactWithObject();
 							interactWithObject();
