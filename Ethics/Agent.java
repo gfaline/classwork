@@ -67,7 +67,7 @@ public class Agent extends SupermarketComponentImpl {
 				}
 			}
 
-			}
+			// }
 
 
 			// TODO: Add a line checking if holding cart before doing this
