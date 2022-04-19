@@ -8,6 +8,7 @@ import java.util.Arrays;
 import com.supermarket.*;
 import java.lang.Math;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Agent extends SupermarketComponentImpl {
 	// WrongShelfNorm covered since we never put anything back
@@ -75,7 +76,7 @@ public class Agent extends SupermarketComponentImpl {
 			shopping_list.add(shopping_list.size(), "register");
 			
 
-			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().toList());
+			quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().collect(Collectors.toList()));
 			quantity_list.add(0, -1);
 			
 			
@@ -220,10 +221,10 @@ public class Agent extends SupermarketComponentImpl {
 					System.out.println("can approach counter");
 					if (playerIsHoldingCart(player)) {
 						// let go of the cart + record where you left the cart
+						System.out.println("releasing cart");
 						if (isFacingEast(cart) || isFacingWest(cart)) {
 							goNorth();
 						}
-						System.out.println("releasing cart");
 						toggleShoppingCart();
 						returnToCartPosition = player.position;
 						cart_index = player.curr_cart;
@@ -237,11 +238,13 @@ public class Agent extends SupermarketComponentImpl {
 							interact2x();
 						}
 					} else if (relevantObj.canInteract(player)) {
+						System.out.println("interacting");
 						// you can interact with the counter. grab the item
 						// InteractionCancellationNorm: enforced by explicity interacting with the counter 3x without cancelling interaction,
 						// so player does not have option to not obtain food
 						interact3x();
  					} else {
+						 System.out.println("approaching counter");
 						// you're not holding a cart or food and you're not close enough to interact with the counter
 						// and you can approach the counter. 
 						approachCounter(obs, relevantObj, player);
