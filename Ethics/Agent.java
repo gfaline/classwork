@@ -156,7 +156,7 @@ public class Agent extends SupermarketComponentImpl {
 					if (checkoutOut /*&& !playerIsHoldingCart(player)*/) {
 						System.out.println("I would be returning to the cart here");
 						// returnToCart(obs, player);
-						returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+						goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 						if (cart.canInteract(player)) {
 							// interact with cart
 							System.out.println("trying to interact with cart");
@@ -182,7 +182,7 @@ public class Agent extends SupermarketComponentImpl {
 					goWest();
 					goWest();
 				} else {
-					returnToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
+					goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 					toggleShoppingCart();
 				}
 				/*
@@ -220,6 +220,9 @@ public class Agent extends SupermarketComponentImpl {
 					System.out.println("can approach counter");
 					if (playerIsHoldingCart(player)) {
 						// let go of the cart + record where you left the cart
+						if (isFacingEast(cart) || isFacingWest(cart)) {
+							goNorth();
+						}
 						System.out.println("releasing cart");
 						toggleShoppingCart();
 						returnToCartPosition = player.position;
@@ -274,7 +277,7 @@ public class Agent extends SupermarketComponentImpl {
 						// let go of the cart + record where you left the cart
 						System.out.println("releasing cart");
 						toggleShoppingCart();
-						returnToCartPosition = player.position;
+						returnToCartPosition = player.position.clone();
 						cart_index = player.curr_cart;
 					} else if (playerIsHoldingFood(player) ) {
 						System.out.println("I am returning to the cart here");
@@ -692,7 +695,7 @@ public class Agent extends SupermarketComponentImpl {
 				// park the cart in the middle of the shelf (should not happen...)
 				x_target = shelf.position[0] + Math.ceil(shelf.width / 2);
 			}
-			y_target = shelf.position[1] + shelf.height + .3;
+			y_target = shelf.position[1] + shelf.height + .6;
 			// CartTheftNorm - we save where we left the cart and return to that cart.
 			returnToCartPosition = player.position.clone();
 			goToLocation(obs, player, x_target, y_target, 0.5, 0.15, false);
