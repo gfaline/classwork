@@ -170,7 +170,9 @@ public class Agent extends SupermarketComponentImpl {
 				} else if (playerIsHoldingCart(player) && checkoutOut && !(checkedOutItems == null || checkedOutItems.equals(""))) {
 					System.out.println("Player thinks it is holding a cart");
 					System.out.println("ready to leave");
-					// ShopliftingNorm: enforced by leaving before checkout and checkedout items are not empty
+					// ShopliftingNorm: enforced by leaving if the list of checked out items are not empyty and player finish the checkout interaction
+					// If the list of checked out items are empyty, that implies through nameing, that nothing has been purchased 
+					// Plyaer always goes to the same register and exits out at the same exit door
 					// EntranceOnlyNorm: enforced implicitly by only leaving through Exit and never leaving through Entrance
 					// BlockingExitNorm: enforced by going West until the player leaves the simulation. Player does not stop in front of exit
 					goWest();
