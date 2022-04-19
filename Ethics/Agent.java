@@ -33,13 +33,14 @@ public class Agent extends SupermarketComponentImpl {
 	boolean atHub = false;
 	boolean checkoutOut = false;
 	Observation.InteractiveObject relevantObj;
-	String[] checkedOutItems = cart.purchased_contents;
-	String[] contents = cart.contents;
 
 	int cart_index = -1;
 	// CartTheftNorm - whenever we let go of the cart, we save where we left the cart and return to that cart.
 	double[] returnToCartPosition;
 	Observation.Cart cart;
+
+	String[] checkedOutItems = cart.purchased_contents;
+	String[] contents = cart.contents;
 
     @Override
     protected void executionLoop() {
@@ -764,7 +765,7 @@ public class Agent extends SupermarketComponentImpl {
 							System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
 							String[] contents = cart.contents;
 							System.out.println("Cart Contents: " + Arrays.toString(contents));
-							!(contents == null || contents.equals("")
+							// !(contents == null || contents.equals("")
 						}
 
 					}
