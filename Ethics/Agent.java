@@ -39,8 +39,8 @@ public class Agent extends SupermarketComponentImpl {
 	double[] returnToCartPosition;
 	Observation.Cart cart;
 
-	String[] checkedOutItems = cart.purchased_contents;
-	String[] contents = cart.contents;
+	String[] checkedOutItems;	// = cart.purchased_contents;
+	String[] contents;			// = cart.contents;
 
     @Override
     protected void executionLoop() {
@@ -87,8 +87,11 @@ public class Agent extends SupermarketComponentImpl {
 
 
 			String last_item = shopping_list.get(shopping_list.size()-2);
-			if (last_item.contains("milk") || last_item.equals("fresh fish") || last_item.equals("prepared foods")) {
-				shopping_list.add(shopping_list.size()-1,"swiss cheese");
+			if (last_item.contains("milk")) {
+				shopping_list.add(shopping_list.size()-1,"broccoli");
+				quantity_list.add(quantity_list.size()-1,1);
+			} else if (last_item.equals("prepared foods"))  {
+				shopping_list.add(shopping_list.size()-1,"fresh fish");
 				quantity_list.add(quantity_list.size()-1,1);
 			}
 			goal = shopping_list.get(0);
@@ -137,6 +140,8 @@ public class Agent extends SupermarketComponentImpl {
 		// get most recent info about the cart
 		if (cart_index != -1) {
 			cart = obs.carts[cart_index];
+			checkedOutItems = cart.purchased_contents;
+			contents = cart.contents;
 		}
 
 		//System.out.println(obs.interactive_stage);
@@ -210,13 +215,14 @@ public class Agent extends SupermarketComponentImpl {
 					if (playerIsHoldingCart(player)) {
 						// let go of the cart + record where you left the cart
 						System.out.println("releasing cart");
-						if (isFacingEast(cart) || isFacingWest(cart)) {
+						if (isFacingEast(player) || isFacingWest(player)) {
 							goNorth();
 						}
 						toggleShoppingCart();
 						// CartTheftNorm - we save where we left the cart and return to that cart.
 						returnToCartPosition = player.position;
 						cart_index = player.curr_cart;
+						System.out.println("released cart");
 					} else if (playerIsHoldingFood(player)) {
 						// return to the cart with the food
 						System.out.println("returning to cart");
@@ -633,11 +639,12 @@ public class Agent extends SupermarketComponentImpl {
 				y_target = relevantObj.position[1] + Math.ceil(relevantObj.height / 2) + 0.5;
 				System.out.println("I shouldn't be here, but y_target = " + y_target);
 			}
+			// y_target = relevantObj.position[1] + Math.ceil(relevantObj.height / 2)+1;
 			x_target = relevantObj.position[0] - ply.width - 0.1;
 			// CartTheftNorm - we save where we left the cart and return to that cart.
 			returnToCartPosition = ply.position.clone();
 
-			goToLocation(obs, ply, x_target, y_target, 0.5, 1.5, true);
+			goToLocation(obs, ply, x_target, y_target, 0.75, 1.5, true);
 		} else if (!playerIsHoldingFood(ply)) {
 			// player is not holding cart. player needs to navigate to counter to pick up item
 			x_target = relevantObj.position[0] - ply.width - 0.1;
@@ -656,7 +663,7 @@ public class Agent extends SupermarketComponentImpl {
 			// player is holding cart. need to navigate to the shelf
 			if (isFacingWest(player)) {
 				// park the cart on the left side of the shelf 
-				x_target = shelf.position[0] - .35;
+				x_target = shelf.position[0] -0.3;
 
 			} else if (isFacingEast(player)) {
 				// park the cart on the right side of the shelf 
@@ -665,6 +672,7 @@ public class Agent extends SupermarketComponentImpl {
 				// park the cart in the middle of the shelf (should not happen...)
 				x_target = shelf.position[0] + Math.ceil(shelf.width / 2);
 			}
+			x_target = shelf.position[0] + Math.ceil(shelf.width / 2);
 			y_target = shelf.position[1] + shelf.height + .6;
 			// CartTheftNorm - we save where we left the cart and return to that cart.
 			returnToCartPosition = player.position.clone();
