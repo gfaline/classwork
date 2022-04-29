@@ -34,11 +34,14 @@ public class Agent extends SupermarketComponentImpl {
 	boolean checkoutOut = false;
 	Observation.InteractiveObject relevantObj;
 
+	int player_index = 0;
+	Observation.Player player;
+
 	int cart_index = -1;
 	// CartTheftNorm - whenever we let go of the cart, we save where we left the cart and return to that cart.
 	double[] returnToCartPosition;
 	Observation.Cart cart;
-
+	
 	String[] checkedOutItems;	// = cart.purchased_contents;
 	String[] contents;			// = cart.contents;
 
@@ -47,10 +50,11 @@ public class Agent extends SupermarketComponentImpl {
 		// this is called every 100ms
 		// put your code in here
 		Observation obs = getLastObservation();
-		Observation.Player player = obs.players[0];
-		//System.out.println("Target at " + obs.players[0].position[0] + " " + obs.players[0].position[1]);
+
+		player_index = this.playerIndex;
+		player = obs.players[player_index];
+		//System.out.println("Target at " + obs.players[player_index].position[0] + " " + obs.players[player_index].position[1]);
 		System.out.println(obs.players.length + " players at " + player.position[0] + " " + player.position[1]);
-		//Player player = obs.players[0];
 		// This loop will find the position of the target given that the target is among expected items
 		// Shelf usually withe 2.25 1.5 or 1.0 2.0
 		if (firsttime) {
@@ -145,14 +149,14 @@ public class Agent extends SupermarketComponentImpl {
 		}
 
 		//System.out.println(obs.interactive_stage);
-		//System.out.println(obs.players[0].position[1]);
+		//System.out.println(obs.players[player_index].position[1]);
 
 		// if the height is within 1 of the position, it can just go sideways... Unless it's a counter or checkout.
 		//
 		double nextX = player.position[0];
 		double nextY = player.position[1];
 
-		System.out.println("Am I in the asile hub? " + atHub + ". And now my emperical value: " + obs.inAisleHub(obs.players[0].index));
+		System.out.println("Am I in the asile hub? " + atHub + ". And now my emperical value: " + obs.inAisleHub(player_index));
 
 		if (goal.equals("checkout") || goal.equals("register") || goal.equals("cartReturn")) {
 			if (!atHub)
@@ -443,7 +447,7 @@ public class Agent extends SupermarketComponentImpl {
 
 	private boolean detectCollison(Observation obs, double x, double y){
 		boolean tempVal = false;
-		Observation.Player player = obs.players[0];
+		Observation.Player player = obs.players[player_index];
 
 		// Up until the next comment, these all cover the ObjectCollisionNorm
 
@@ -501,7 +505,7 @@ public class Agent extends SupermarketComponentImpl {
 		// PlayerCollisionNorm If we follow the PersonalSpaceNorm, you cannot collide
 		for (Observation.Player current_player: obs.players){
 			// Yes, this is meant to check for the same object
-			if (!(player == current_player)){
+			if (!(player.equals(current_player))){
 				double player_x = player.position[0];
 				double player_y = player.position[1];
 				double curr_x = current_player.position[0];
