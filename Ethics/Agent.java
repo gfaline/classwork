@@ -159,26 +159,29 @@ public class Agent extends SupermarketComponentImpl {
 		System.out.println("Am I in the asile hub? " + atHub + ". And now my emperical value: " + obs.inAisleHub(player_index));
 
 		if (goal.equals("checkout") || goal.equals("register") || goal.equals("cartReturn")) {
-			if (!atHub)
-				goToAisleHub(obs, player);
 			if (goal.equals("checkout") || goal.equals("register")) {
-				if(!checkoutOut) {
-					if (!atHub && !obs.inAisle(0, getAisleIndex(relevantObj)))
+				if( cart.contents.length!=0) {
+					if (!atHub /*&& !obs.inAisle(0, getAisleIndex(relevantObj))*/){
 						goToAisleHub(obs, player);
-					approachRegister(obs, relevantObj, player);
-					if (checkoutOut /*&& !playerIsHoldingCart(player)*/) {
+					} else if (checkoutOut /*&& !playerIsHoldingCart(player)*/) {
 						System.out.println("I would be returning to the cart here");
 						goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 						if (cart.canInteract(player)) {
 							// interact with cart
 							System.out.println("trying to interact with cart");
 							interactWithObject();
-							interactWithObject();
-									
+							interactWithObject();			
 						}
+					} else {
+						approachRegister(obs, relevantObj, player);
 					}
 				
-				} else if (playerIsHoldingCart(player) && checkoutOut && !(checkedOutItems == null || checkedOutItems.equals(""))) {
+				} else if (playerIsHoldingCart(player) && cart.contents.length==0 && !(checkedOutItems == null || checkedOutItems.equals(""))) {
+					String[] checkedOutItems = cart.purchased_contents;
+					System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
+					String[] contents = cart.contents;
+					System.out.println("Cart Contents: " + Arrays.toString(contents));
+
 					System.out.println("Player thinks it is holding a cart");
 					System.out.println("ready to leave");
 					// ShopliftingNorm: enforced by leaving if the list of checked out items are not empyty and player finish the checkout interaction
@@ -200,9 +203,15 @@ public class Agent extends SupermarketComponentImpl {
 					toggleShoppingCart();
 				}
 				
-			} else{
-				System.out.println(relevantObj.position[1]);
-				approachCartReturn(obs, relevantObj, player);
+			} else {
+				if (canApproachCartReturn(obs, player)) {
+					System.out.println(relevantObj.position[1]);
+					approachCartReturn(obs, relevantObj, player);
+	
+				} else if (!atHub) {
+					goToAisleHub(obs, player);
+	
+				}
 			}
 		} else if (relevantObj.getClass().equals(Observation.Counter.class)) {
 			if (!playerHasItemQuantity(cart, goal)) {
@@ -817,6 +826,17 @@ public class Agent extends SupermarketComponentImpl {
 		approachable =  approachable && obs.inAisle(0, getAisleIndex(shelf)); // it's in the correct aisle
 
 		return approachable;
+	}
+
+	private boolean canApproachCartReturn(Observation obs, Observation.Player player) {
+		boolean canApproach = true;
+		double playerX = player.position[0];
+		double playerY = player.position[1];
+
+		canApproach = canApproach && playerY >= 13 && playerY <= 18.5;
+		canApproach = canApproach && playerX >= 0.5 && playerX <= 3;
+		
+		return canApproach;
 	}
 
 	private void approachCartReturn(Observation obs, Observation.InteractiveObject cartReturn, Observation.Player ply){
