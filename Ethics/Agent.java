@@ -159,31 +159,34 @@ public class Agent extends SupermarketComponentImpl {
 		System.out.println("Am I in the asile hub? " + atHub + ". And now my emperical value: " + obs.inAisleHub(player_index));
 
 		if (goal.equals("checkout") || goal.equals("register") || goal.equals("cartReturn")) {
+			//if (!atHub)
+			//	goToAisleHub(obs, player);
 			if (goal.equals("checkout") || goal.equals("register")) {
-				if( cart.contents.length!=0) {
-					if (!atHub /*&& !obs.inAisle(0, getAisleIndex(relevantObj))*/){
+				if(cart.contents.length!=0) {
+					if (!atHub && !obs.inAisle(0, getAisleIndex(relevantObj)))
 						goToAisleHub(obs, player);
-					} else if (checkoutOut /*&& !playerIsHoldingCart(player)*/) {
+					approachRegister(obs, relevantObj, player);
+					if (checkoutOut /*&& !playerIsHoldingCart(player)*/) {
 						System.out.println("I would be returning to the cart here");
 						goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 						if (cart.canInteract(player)) {
 							// interact with cart
 							System.out.println("trying to interact with cart");
 							interactWithObject();
-							interactWithObject();			
+							interactWithObject();
+							interactWithObject();
+							
+									
 						}
-					} else {
-						approachRegister(obs, relevantObj, player);
 					}
 				
 				} else if (playerIsHoldingCart(player) && cart.contents.length==0 && !(checkedOutItems == null || checkedOutItems.equals(""))) {
+					System.out.println("Player thinks it is holding a cart");
+					System.out.println("ready to leave");
 					String[] checkedOutItems = cart.purchased_contents;
 					System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
 					String[] contents = cart.contents;
 					System.out.println("Cart Contents: " + Arrays.toString(contents));
-
-					System.out.println("Player thinks it is holding a cart");
-					System.out.println("ready to leave");
 					// ShopliftingNorm: enforced by leaving if the list of checked out items are not empyty and player finish the checkout interaction
 					// If the list of checked out items are empyty, that implies through nameing, that nothing has been purchased 
 					// Plyaer always goes to the same register and exits out at the same exit door
@@ -201,9 +204,13 @@ public class Agent extends SupermarketComponentImpl {
 				} else {
 					goToCartLocation(obs, player, returnToCartPosition[0], returnToCartPosition[1]);
 					toggleShoppingCart();
+
 				}
 				
-			} else {
+			} else{
+				//System.out.println(relevantObj.position[1]);
+				//approachCartReturn(obs, relevantObj, player);
+				
 				if (canApproachCartReturn(obs, player)) {
 					System.out.println(relevantObj.position[1]);
 					approachCartReturn(obs, relevantObj, player);
@@ -325,6 +332,18 @@ public class Agent extends SupermarketComponentImpl {
 		// System.out.println("here I am! Leaving the main loop!!!");
 
 	}
+
+	private boolean canApproachCartReturn(Observation obs, Observation.Player player) {
+		boolean canApproach = true;
+		double playerX = player.position[0];
+		double playerY = player.position[1];
+
+		canApproach = canApproach && playerY >= 13 && playerY <= 18.5;
+		canApproach = canApproach && playerX >= 0.5 && playerX <= 3;
+
+		return canApproach;
+	}
+
 
 	private void goToAisleHub(Observation obs, Observation.Player ply){
 		double x = ply.position[0];
@@ -730,7 +749,7 @@ public class Agent extends SupermarketComponentImpl {
 	}
 
 	private void approachRegister (Observation obs, Observation.InteractiveObject register, Observation.Player ply){
-		double x_target = relevantObj.position[0]+ 1;
+		double x_target = relevantObj.position[0]+ 0.8;
 		double y_target = relevantObj.position[1]+ 1.1;
 
 		System.out.println("Putting cart belside register, this includes toggling it");
@@ -760,12 +779,14 @@ public class Agent extends SupermarketComponentImpl {
 				
 			}else if (!playerIsHoldingCart(ply) && !checkoutOut) {
 				System.out.println("not holding cart, going to register");
-				goToX(obs, ply, register.position[0] + (relevantObj.width / 2.0), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
+				//goToX(obs, ply, register.position[0] + (relevantObj.width / 2.0), relevantObj.position[1] + (Math.ceil(relevantObj.height / 2)) + .1);
 					if (!register.collision(ply, ply.position[0], ply.position[1] - .3)) {
 					// if you're still below to the register, go north
 					System.out.println("Go North to REGISTER");
 						goNorth();
-					} else if (!checkoutOut) {
+						goNorth();
+						goNorth();
+					} else if (cart.contents.length !=0) {
 						System.out.println("next to register, but you dont checkout yet");
 						// if you're at the register and you're not holding an item yet
 						if (ply.direction != 0) {
@@ -780,13 +801,16 @@ public class Agent extends SupermarketComponentImpl {
 							interactWithObject();
 							interactWithObject();
 							interactWithObject();
-							checkoutOut = true;
+							
 							System.out.println("checkoutOut: " + checkoutOut);
 							String[] checkedOutItems = cart.purchased_contents;
 							System.out.println("Purchased: " + Arrays.toString(checkedOutItems));
 							String[] contents = cart.contents;
 							System.out.println("Cart Contents: " + Arrays.toString(contents));
-							// !(contents == null || contents.equals("")
+							if (contents.length == 0){
+								checkoutOut = true;
+							}
+							
 						}
 
 					}
@@ -826,17 +850,6 @@ public class Agent extends SupermarketComponentImpl {
 		approachable =  approachable && obs.inAisle(0, getAisleIndex(shelf)); // it's in the correct aisle
 
 		return approachable;
-	}
-
-	private boolean canApproachCartReturn(Observation obs, Observation.Player player) {
-		boolean canApproach = true;
-		double playerX = player.position[0];
-		double playerY = player.position[1];
-
-		canApproach = canApproach && playerY >= 13 && playerY <= 18.5;
-		canApproach = canApproach && playerX >= 0.5 && playerX <= 3;
-		
-		return canApproach;
 	}
 
 	private void approachCartReturn(Observation obs, Observation.InteractiveObject cartReturn, Observation.Player ply){
