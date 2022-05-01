@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.Math;
 import java.util.Observable;
+import java.util.Random;
 import java.util.random.*;
 import java.util.stream.Collectors;
 
@@ -46,8 +47,11 @@ public class Agent2 extends SupermarketComponentImpl {
 
 	int collision_step_counter = -1;
 	int max_collision_steps = 1;
+	int collision_handler_method = 0;
+	boolean try_alternate_hub = false;
 
 	Observation obs;
+	Random r = new Random();
 
     @Override
     protected void executionLoop() {
@@ -65,12 +69,12 @@ public class Agent2 extends SupermarketComponentImpl {
 		player_index = this.playerIndex;
 		player = obs.players[player_index];
 
-		System.out.println(obs.carts.length + " carts");
-		System.out.println(obs.shelves.length + " shelves");
-		System.out.println(obs.counters.length + " counters");
-		System.out.println(obs.registers.length + " registers");
-		System.out.println(obs.cartReturns.length + " cartReturns");
-		System.out.println("Shoppping list: " + Arrays.toString(player.shopping_list));
+		// customPrint(obs.carts.length + " carts");
+		// customPrint(obs.shelves.length + " shelves");
+		// customPrint(obs.counters.length + " counters");
+		// customPrint(obs.registers.length + " registers");
+		// customPrint(obs.cartReturns.length + " cartReturns");
+		customPrint("Shoppping list: " + Arrays.toString(player.shopping_list));
 
 		// shopping list manipulation
 		shopping_list = new ArrayList<String>(Arrays.asList(player.shopping_list));
@@ -99,11 +103,11 @@ public class Agent2 extends SupermarketComponentImpl {
 		} else {
 			// don't have cart_index until after cart return is done
 			cart = obs.carts[cart_index];
-			// System.out.println("goaltype="+goalType);
+			// customPrint("goaltype="+goalType);
 			if (goalType.equals("shelf")) {
 				shelfProcess(obs);
 			} else if (goalType.equals("counter")) {
-				// System.out.println("goal type is counter");
+				// customPrint("goal type is counter");
 				counterProcess(obs);
 			} else if (goalType.equals("register")) {
 				checkoutProcess(obs);
@@ -118,6 +122,7 @@ public class Agent2 extends SupermarketComponentImpl {
 		boolean canApproach = canApproachCartReturn(obs, player);
 		if (hasCart) {  
 			// you have a cart. record which cart is yours. the next step, you will start shopping.
+			// OneCartOnlyNorm we only take one cart and never return to this function as it is crossed off the list
 			cart_index = player.curr_cart;
 			cart = obs.carts[cart_index];
 		} else if (canInteract) {
@@ -128,6 +133,7 @@ public class Agent2 extends SupermarketComponentImpl {
 			approachCartReturn(obs, cartReturn, player);
 		} else {
 			// if you don't have a cart + you can't interact with the cart return + you can't approach the cart return, go closer to the cart return
+			// customPrint("Navigating to cart return");
 			navigateToCartReturn(obs, player, cartReturn);
 		}
 	}
@@ -135,36 +141,44 @@ public class Agent2 extends SupermarketComponentImpl {
 	private void shelfProcess(Observation obs) {
 		Observation.Shelf shelf = getGoalShelf(obs);
 		if (!playerHasItemQuantity(cart, goal)) { // get more of the item of food
-			// System.out.println("does not have enough");
+			// customPrint("does not have enough");
 			if (canApproachShelf(obs, shelf, player)) {
-				// System.out.println("can approach");
+				// UnattendedCartNorm: (same as in counter) enforced by only approaching shelf when player is within 2 units of shelf.
+				// full aproach shelf action sequence consists of 1. release cart, 2. walk to shelf, 3. interact with shelf (3x), 
+				// 4. return to cart, 5. place item back in cart. Since player is within 2 units of shelf when the interaction starts, 
+				// the player will not be too far from the cart
+				// customPrint("can approach");
 				if (playerIsHoldingCart(player)) {
 					// you're holding a cart. let go + record where you left it
 					releaseShoppingCart(obs, player);
 				} else if (playerIsHoldingFood(player)) {
 					// player is holding the cart
-					// System.out.println("holding " + goal);
+					// customPrint("holding " + goal);
 					goToCartLocation(obs, player);
 					if (cart.canInteract(player)) {
+						// InteractionCancellationNorm: enforced by explicity interacting with the cart 2x without cancelling interaction,
+						// so player does not have option to not put food in cart
 						interact2x();
-						System.out.println("placing item from "+goal+ " shelf in cart");
+						customPrint("placing item from "+goal+ " shelf in cart");
 					}
 				} else if (shelf.canInteract(player)) {
 					// you can interact with the shelf. grab the item
+					// InteractionCancellationNorm: enforced by explicity interacting with the shelf 2x without cancelling interaction,
+					// so player does not have option to not obtain food
 					interact2x();
-					System.out.println("interacting with shelf " + goal);
+					customPrint("interacting with shelf " + goal);
 				} else {
 					approachShelf(obs, shelf, player);
 				}
 			} else {
-				// System.out.println("going to shelf location");
+				// customPrint("going to shelf location");
 				goToShelfLocation(obs, shelf, player);
 			}
 
 		} else if (!playerIsHoldingCart(player)) {
 			toggleShoppingCart();
 		} else {
-			System.out.println("Player is done with the "+goal+" shelf");
+			customPrint("Player is done with the "+goal+" shelf");
 			crossOffItem();
 		}
 	}
@@ -172,24 +186,33 @@ public class Agent2 extends SupermarketComponentImpl {
 	private void counterProcess(Observation obs) {
 		Observation.Counter counter = getGoalCounter(obs);
 		if (!playerHasItemQuantity(cart, goal)) { // get more of the item of food
-			// System.out.println("I think i'm about to error");
+			// customPrint("I think i'm about to error");
 			if (canApproachCounter(obs, counter, player)) {
-				// System.out.println("Can approach counter");
+				// UnattendedCartNorm: enforced by only approaching counter when player is within 2 units of counter.
+				// full aproach counter action sequence consists of 1. release cart, 2. walk to counter, 3. interact with counter (3x), 
+				// 4. return to cart, 5. place item back in cart. Since player is within 2 units of counter when the interaction starts, 
+				// the player will not be too far from the cart
+				// customPrint("Can approach counter");
+
 				if (playerIsHoldingCart(player)) {
 					// you're holding a cart. let go + record where you left it
 					releaseShoppingCart(obs, player);
 				} else if (playerIsHoldingFood(player)) {
 					// player is holding the cart
-					// System.out.println("holding " + goal);
+					// customPrint("holding " + goal);
 					goToCartLocation(obs, player);
 					if (cart.canInteract(player)) {
+						// InteractionCancellationNorm: enforced by explicity interacting with the cart 2x without cancelling interaction,
+						// so player does not have option to not put food in the cart
 						interact2x();
-						System.out.println("placing item from "+goal+" counter in cart");
+						customPrint("placing item from "+goal+" counter in cart");
 					}
 				} else if (counter.canInteract(player)) {
 					// you can interact with the shelf. grab the item
-					interact2x();
-					System.out.println("interacting with counter " + goal);
+					// InteractionCancellationNorm: enforced by explicity interacting with the counter 3x without cancelling interaction,
+					// so player does not have option to not obtain food
+					interact3x();
+					customPrint("interacting with counter " + goal);
 				} else {
 					approachCounter(obs, counter, player);
 				}
@@ -200,7 +223,7 @@ public class Agent2 extends SupermarketComponentImpl {
 		} else if (!playerIsHoldingCart(player)) {
 			toggleShoppingCart();
 		} else {
-			System.out.println("Player is done with the "+goal+" counter");
+			customPrint("Player is done with the "+goal+" counter");
 			crossOffItem();
 		}
 	}
@@ -208,27 +231,32 @@ public class Agent2 extends SupermarketComponentImpl {
 	private void checkoutProcess(Observation obs) {
 		Observation.Register register = getGoalRegister(obs);
 		if (cart.contents.length != 0) {
-			if (goToRegisterLocation(obs, register, player)) {//canApproachRegister(obs, register, player)){
-				System.out.println("here");
+			if (goToRegisterLocation(obs, register, player)) {
+				customPrint("here");
 				if (playerIsHoldingCart(player)) {
 					releaseShoppingCart(obs, player);
 				} else if (register.canInteract(player)) {
+					// InteractionCancellationNorm: enforced by explicity interacting with the register 3x without cancelling interaction,
+					// so player does not have option to not purchase food
 					interact3x();
-					System.out.println("interacting with register + checking out");
+					customPrint("interacting with register + checking out");
 				} else {
 					approachRegister(obs, register, player);
 				}
-			} /*else {
-				goToRegisterLocation(obs, register, player);
-			}*/
+			} 
 		} else if (!playerIsHoldingCart(player)) {
 			goToCartLocation(obs, player);
 			if (cart.canInteract(player)) {
 				toggleShoppingCart();
-				System.out.println("Picking up cart after successfully checking out");
+				customPrint("Picking up cart after successfully checking out");
 			}
 		} else {
-			goWest();
+			// ShopliftingNorm: enforced by leaving if the list of checked out items are not empyty and player finish the checkout interaction
+			// If the list of contents is empty, that implies that everything has been purchased
+			// EntranceOnlyNorm: enforced implicitly by only leaving through Exit and never leaving through Entrance
+			// Player always goes to the same register and exits out through the same exit door
+			// BlockingExitNorm: enforced by going West until the player leaves the simulation. Player does not stop in front of exit
+			leave(obs);
 		}
 	}
 
@@ -238,7 +266,10 @@ public class Agent2 extends SupermarketComponentImpl {
 		double playerX = player.position[0];
 		double playerY = player.position[1];
 
-		canApproach = canApproach && playerY >= 13 && playerY <= 18.5;
+		// is player in correct region to approach cart return?
+		double region_top = Math.max(obs.registers[0].position[1], obs.registers[1].position[1]);
+		double region_bottom = obs.cartReturns[0].position[1];
+		canApproach = canApproach && playerY >= region_top && playerY <= region_bottom;
 
 		boolean canApproachX = false;
 		for (Observation.CartReturn cr : obs.cartReturns) {
@@ -247,8 +278,54 @@ public class Agent2 extends SupermarketComponentImpl {
 		}
 
 		canApproach = canApproach && canApproachX;
-		/** cart return is unobstructed */
+		// is cart return un-obstructed?
+		// wait for other players to leave the cartReturn area 
+		// (check that there are no carts or players between you + the cart returns)
+		canApproach = canApproach & !cartReturnIsBlocked(obs);
 		return canApproach;
+	}
+
+	private boolean cartReturnIsBlocked(Observation obs) {
+		Observation.Player player = obs.players[player_index];
+		double player_y = player.position[1];
+		double cartReturn_y = obs.cartReturns[0].position[1];
+
+		// check if a player is blocking
+		for (int i=0; i<obs.players.length; i++) {
+			if (i != player_index) {
+				Observation.Player p = obs.players[i];
+				double p_x = p.position[0];
+				double p_y = p.position[1];
+
+				// is player p in the x range to block the player from the cart return?
+				if (p_x >=0 && p_x <=3) {
+					// is player p in the y range to block the player from the cart return?
+					if (p_y <=cartReturn_y && p_y > player_y) {
+						customPrint("Cannot get to cartReturn. Player " + i + " at ("+p_x+","+p_y+") is blocking me.");
+						return true;
+					}
+				}
+
+			}
+		}
+
+		// check if a cart is blocking
+		for (int i=0; i<obs.carts.length; i++) {
+			Observation.Cart c = obs.carts[i];
+			double c_x = c.position[0];
+			double c_y = c.position[1];
+
+			// is player p in the x range to block the player from the cart return?
+			if (c_x >=0 && c_x <=3) {
+				// is player p in the y range to block the player from the cart return?
+				if (c_y <=cartReturn_y && c_y > player_y) {
+					customPrint("Cannot get to cartReturn. Cart " + i + " is blocking me");
+					return true;
+				}
+			}
+
+		}
+		return false;
 	}
 
 	private boolean canInteractWithACartReturn(Observation obs, Observation.Player player) {
@@ -267,29 +344,32 @@ public class Agent2 extends SupermarketComponentImpl {
 	private void approachCartReturn(Observation obs, Observation.InteractiveObject cartReturn, Observation.Player ply){
 		double ydiff = Math.abs(cartReturn.position[1] - ply.position[1]);
 		double xdiff = Math.abs(cartReturn.position[0] - ply.position[0]);
-		goSouth();
+		mygoSouth(obs);
 	}
 
 	private void navigateToCartReturn(Observation obs, Observation.Player player, Observation.CartReturn cartReturn) {
-		if (isInWestAisleHub(player)) {
+		if (isInWestAisleHub(player) || isAboveCartReturnAndBelowRegisters(obs, player)) {
 			goToCartReturn(obs, player, cartReturn);
-			// goWest();
 		} else if (isInAnyAisle(player)) {
-			goWest();
+			customPrint("here2");
+			mygoWest(obs);
 		} else if (isInEastAisleHub(player)) {
+			customPrint("here3");
 			// goToAisle(obs, player, getClosestAisleIndex(player));
-			goWest();
+			mygoWest(obs);
 		} else {
-			goWest();
+		}/*else if (player.) {
+			// mygoWest(obs);
+			// goWest();
 			// goEast();
-			/* you shouldn't be here... */
-		}
+			/* you shouldn't be here... /
+		}*/
 	}
 
 	private void goToCartReturn(Observation obs, Observation.Player player, Observation.CartReturn cartReturn) {
 		double targetX = cartReturn.position[0];
-		double targetY = cartReturn.position[1]-2;
-		goToLocation(obs, player, targetX, targetY, false);
+		double targetY = cartReturn.position[1]-6;
+		goToLocation(obs, player, targetX, targetY, 1.5, 0.3, true);
 	}
 
 	/*************************** COUNTER STUFF ***************************/
@@ -306,10 +386,10 @@ public class Agent2 extends SupermarketComponentImpl {
 
 		double east_aisle_hub_start_x = 15.5;
 
-		// System.out.println("player coordinates: (" + player_x + ", " + player_y + ")");
-		// System.out.println("player height = " + player_height + ", width = " + player_width);
-		// System.out.println("target coordinates: (" + target_x + ", " + target_y + ")");
-		// System.out.println("target height = " + target_height + ", width = " + target_width);
+		// customPrint("player coordinates: (" + player_x + ", " + player_y + ")");
+		// customPrint("player height = " + player_height + ", width = " + player_width);
+		// customPrint("target coordinates: (" + target_x + ", " + target_y + ")");
+		// customPrint("target height = " + target_height + ", width = " + target_width);
 
 
 		// is player in x-bounds?
@@ -325,8 +405,7 @@ public class Agent2 extends SupermarketComponentImpl {
 	}
 
 	private void approachCounter(Observation obs, Observation.InteractiveObject counter, Observation.Player ply){
-		goEast();
-		 
+		mygoEast(obs);
 	}
 
 	private void goToCounterLocation(Observation obs, Observation.Counter counter, Observation.Player ply) {
@@ -337,13 +416,13 @@ public class Agent2 extends SupermarketComponentImpl {
 			// you're in the wrong aisle. go to the aisle hub
 			goToAnyAisleHub(obs, player);
 		} else if (isInWestAisleHub(player) || isWestOfWestHub(player)) {
-			// System.out.println("going to aisle");
+			// customPrint("going to aisle");
 			goToAisle(obs, player, getClosestAisleIndex(player));
 			// if (isInAnyAisle(player)) {
 			// 	goEast();
 			// }
 		} else {
-			// System.out.println("going to location");
+			// customPrint("going to location");
 			x_target = counter.position[0] - player.width - 0.1;
 			y_target = counter.position[1] + Math.ceil(counter.height/4) ;
 			goToLocation(obs, player, x_target, y_target, 0.75, 0.15, true);
@@ -363,10 +442,10 @@ public class Agent2 extends SupermarketComponentImpl {
 		double target_height = shelf.height;
 		double target_width = shelf.width;
 
-		// System.out.println("player coordinates: (" + player_x + ", " + player_y + ")");
-		// System.out.println("player height = " + player_height + ", width = " + player_width);
-		// System.out.println("target coordinates: (" + target_x + ", " + target_y + ")");
-		// System.out.println("target height = " + target_height + ", width = " + target_width);
+		// customPrint("player coordinates: (" + player_x + ", " + player_y + ")");
+		// customPrint("player height = " + player_height + ", width = " + player_width);
+		// customPrint("target coordinates: (" + target_x + ", " + target_y + ")");
+		// customPrint("target height = " + target_height + ", width = " + target_width);
 
 
 		// is player in x-bounds?
@@ -381,14 +460,14 @@ public class Agent2 extends SupermarketComponentImpl {
 
 	private void approachShelf  (Observation obs, Observation.InteractiveObject shelf, Observation.Player ply) {
 		// Has it go south of the aisle
-		goNorth();
+		mygoNorth(obs);
 	}
 
 	private void goToShelfLocation(Observation obs, Observation.Shelf shelf, Observation.Player player) {
 		double x_target = shelf.position[0];
 		double y_target = shelf.position[1];
 
-		// System.out.println("isInAnyAisle = " + isInAnyAisle(player) + "; isInAisle = " + isInAisle(obs, shelf));
+		// customPrint("isInAnyAisle = " + isInAnyAisle(player) + "; isInAisle = " + isInAisle(obs, shelf));
 		if (isEastOfEastHub(player) || isWestOfWestHub(player) || isInWrongAisle(obs, player, shelf)) {
 			// you're in the wrong aisle. go to the aisle hub
 			goToAnyAisleHub(obs, player);
@@ -420,7 +499,7 @@ public class Agent2 extends SupermarketComponentImpl {
 	}
 
 	private void approachRegister (Observation obs, Observation.InteractiveObject register, Observation.Player ply){
-		goNorth();
+		mygoNorth(obs);
 	}
 
 	private boolean goToRegisterLocation(Observation obs, Observation.Register register, Observation.Player player) {
@@ -430,14 +509,14 @@ public class Agent2 extends SupermarketComponentImpl {
 			// will return true when it doesn't move (aka when it's at the right position)
 			return !goToLocation(obs, player, x_target, y_target, 0.1, 0.1, false);
 		} else if (isEastOfEastHub(player) || isWestOfWestHub(player) ) {
-			// System.out.println("going to closest aisle hub");
+			// customPrint("going to closest aisle hub");
 			goToAnyAisleHub(obs, player);
 		} else if (isInEastAisleHub(player)) {
-			System.out.println("going to aisle");
+			// customPrint("going to aisle");
 			goToAisle(obs, player, getClosestAisleIndex(player));
 		} else if (isInAnyAisle(player)) {
-			System.out.println("leaving aisle");
-			goWest();
+			// customPrint("leaving aisle");
+			mygoWest(obs);
 		} else {
 			// will return true when it doesn't move (aka when it's at the right position)
 			return true;
@@ -446,12 +525,16 @@ public class Agent2 extends SupermarketComponentImpl {
 		return false;
 	}
 
+	private void leave(Observation obs) {
+		mygoWest(obs);
+	}
+
 	/*************************** CART STUFF ***************************/
 	private void goToCartLocation(Observation obs, Observation.Player player) {
 		double targetX = returnToCartPosition[0];
 		double targetY = returnToCartPosition[1];
 		if (!goToLocation(obs, player, targetX, targetY, 0.15, 0.15, false)) {
-			// System.out.println("w/in threshold of cart interaction");
+			// customPrint("w/in threshold of cart interaction");
 			turnToFace(cart, player);			
 		}
 	}
@@ -461,16 +544,16 @@ public class Agent2 extends SupermarketComponentImpl {
 	}
 
 	private void releaseShoppingCart(Observation obs, Observation.Player player) {
+		// CartTheftNorm - we save where we left the cart and return to that cart.
 		toggleShoppingCart();
 		returnToCartPosition = player.position.clone();
-		System.out.println("released shopping cart");
-		// return player.position.clone();
+		customPrint("released shopping cart");
 	}
 
 	private void turnToFace(Observation.Cart cart, Observation.Player ply) {
 		if (cart.direction != ply.direction) {  
 			// turn to face the cart
-			System.out.println("turning to face the cart");
+			customPrint("turning to face the cart");
 			if (isFacingEast(cart)) {
 				goEast();
 			}
@@ -560,9 +643,22 @@ public class Agent2 extends SupermarketComponentImpl {
 		if (shopping_list.size() > 0) {
 			// make the next item the target
 			goal = shopping_list.get(0);
-			System.out.println("here I am! I need quantity = " + quantity_list.get(0) + " of item = " + goal );
+			customPrint("I need quantity = " + quantity_list.get(0) + " of item = " + goal );
 		}
 
+	}
+
+	private boolean reorganizeShoppingList() {
+		if (shopping_list.size() == 1) {
+			return false;
+		} else {
+			String item  = shopping_list.remove(0);
+			int quantity = quantity_list.remove(0);
+			shopping_list.add(item);
+			quantity_list.add(quantity);
+			customPrint("Quantity = " + quantity + " of item = " + item + " moved to end of shopping_list and quantity_list.");
+			return true;
+		}
 	}
 	
 	private void interact1x() {
@@ -592,16 +688,77 @@ public class Agent2 extends SupermarketComponentImpl {
 
 	private void goToAnyAisleHub(Observation obs, Observation.Player player) {
 		if (isEastOfEastHub(player)) {
-			goWest();
+			mygoWest(obs);
 		} else if (isWestOfWestHub(player)) {
-			goEast();
+			mygoEast(obs);
 		} else if (isInAnyAisle(player)) {
 			// TODO: add logic to decide which hub to go to 
-			goEast();
+			mygoEast(obs);
 		} 
 	}
 
 	/**************** Utility methods for generic navigation ****************/
+	private void mygoEast(Observation obs) {
+		if (!isFacingEast(player)) {
+			customPrint("turning east");
+			goEast();
+		} else if(!collisionDetected(obs, 0.15, 0)){
+			// customPrint("east safe");
+			goEast();
+		} else{
+			// customPrint("east not safe");
+			nop();
+		}
+
+
+	}
+
+	private void mygoWest(Observation obs) {
+		if (!isFacingWest(player)) {
+			customPrint("turning west");
+			goWest();
+		} else if(!collisionDetected(obs, - 0.15, 0)){
+			// customPrint("west safe");
+			goWest();
+		} else{
+			// customPrint("west not safe");
+			nop();
+		}
+
+
+	}
+
+	private void mygoSouth(Observation obs) {
+		if (!isFacingSouth(player)) {
+			customPrint("turning south");
+			goSouth();
+		} else if(!collisionDetected(obs, 0, 0.15)){
+			// customPrint("south safe");
+			goSouth();
+		}
+		else{
+			// customPrint("south not safe");
+			nop();
+		}
+
+
+	}
+
+	private void mygoNorth(Observation obs) {
+		if (!isFacingNorth(player)) {
+			customPrint("turning north");
+			goNorth();
+		} else if(!collisionDetected(obs, 0, - 0.15)){
+			// customPrint("north safe");
+			goNorth();
+		}
+		else{
+			// customPrint("north not safe");
+			nop();
+		}
+
+	}
+
 	private boolean goToLocation(Observation obs, Observation.Player player, double targetX, double targetY, boolean xFirst) {
 		return goToLocation(obs, player, targetX, targetY, 0.3, 0.3, xFirst);
 	}
@@ -610,20 +767,20 @@ public class Agent2 extends SupermarketComponentImpl {
 								 double max_xdiff, double max_ydiff, boolean xFirst) {
 		double xdiff = Math.abs(targetX - player.position[0]);
 		double ydiff = Math.abs(targetY - player.position[1]);
-		// System.out.println("Xdiff = " + xdiff + ", Ydiff = " + ydiff);
+		// customPrint("Xdiff = " + xdiff + ", Ydiff = " + ydiff);
 		if (xFirst) {
 			if (xdiff >= max_xdiff) {
-				goToX(player, targetX );
+				goToX(obs, player, targetX );
 			} else if (ydiff >= max_ydiff) {
-				goToY(player, targetY);
+				goToY(obs, player, targetY);
 			} else {
 				return false;
 			}
 		} else {
 			if (ydiff >= max_ydiff) {
-				goToY(player, targetY);
+				goToY(obs, player, targetY);
 			} else if (xdiff >= max_xdiff) {
-				goToX(player, targetX );
+				goToX(obs, player, targetX );
 			} else {
 				return false;
 			}
@@ -633,23 +790,23 @@ public class Agent2 extends SupermarketComponentImpl {
 
 	}
 
-	private void goToX(Observation.Player player, double targetX ) {
+	private void goToX(Observation obs, Observation.Player player, double targetX ) {
 		if (isEastOf(player, targetX)) {	
-			goWest();
-			// System.out.println("I am going West");
+			mygoWest(obs);
+			// customPrint("I am going West");
 		} else /*isWestOf(player,targetX)*/{
-			goEast();
-			// System.out.println("I am going East");
+			mygoEast(obs);
+			// customPrint("I am going East");
 		}
 	}
 
-	private void goToY(Observation.Player player, double targetY ) {
+	private void goToY(Observation obs, Observation.Player player, double targetY ) {
 		if (isNorthOf(player, targetY)) {
-			goSouth();
-			// System.out.println("I am going South");
+			mygoSouth(obs);
+			// customPrint("I am going South");
 		} else /*isSouthOf(player, targetY)*/{
-			goNorth();
-			// System.out.println("I am going North");
+			mygoNorth(obs);
+			// customPrint("I am going North");
 		}
 	}
 
@@ -765,6 +922,14 @@ public class Agent2 extends SupermarketComponentImpl {
 		return isWestOfWestHub(player) && y >= region_top && y <= region_bottom;
 	}
 
+	private boolean isAboveCartReturnAndBelowRegisters(Observation obs, Observation.Player player) {
+		double y = player.position[1];
+		double region_top    = Math.max(obs.registers[0].position[1],obs.registers[1].position[1]);
+		double region_bottom = obs.cartReturns[0].position[1];
+
+		return isWestOfWestHub(player) && y >= region_top && y <= region_bottom;
+	}
+
 	private boolean playerHasItemQuantity(Observation.Cart cart, String item) {
 		int target_quantity = quantity_list.get(0);
 		if (cart == null || cart.contents == null || cart.contents.length == 0) {
@@ -839,46 +1004,29 @@ public class Agent2 extends SupermarketComponentImpl {
 			}
 		}
 
+		// Up until the final condition (where we handle collisions), these all cover the ObjectCollisionNorm
 		// dynamic obstacles! these are harder!
 		// carts
-		for (int i=0; i< obs.carts.length; i++) {
-			if (playerIsHoldingCart(player) && i != cart_index) { // make sure you don't think you're colliding with the cart you're hodling
-				Observation.Cart c = obs.carts[i];
-				if (c.collision(player, new_x, new_y)) {
-					System.out.println("Colliding with cart index = " + i + ". My cart index = " + cart_index);
-					collisionDetected = true;
-				}
-			}
+		if (collisonDetectedWithCart(new_x, new_y)) {
+			collisionDetected = true;
 		}
 		
 		// players
-		for (int i=0; i< obs.players.length; i++) {
-			if (i != player_index) { // make sure you don't compare to your self
-				Observation.Player p = obs.players[i];
-				double player_x = player.position[0];
-				double player_y = player.position[1];
-
-				double x_diff = Math.abs(player_x - new_x);
-				double y_diff = Math.abs(player_y - new_y);
-
-				if (x_diff <= 1 || y_diff <= 1) {
-					System.out.println("Colliding with player index = " + i + ". My player index = " + player_index);
-					collisionDetected = true;
-				}
-			}
+		if (collisonDetectedWithPlayer(new_x, new_y)) {
+			collisionDetected = true;
 		}
 
 		// below are static obstacles. note, baskets, shelves, counters, aisles, + cart returns should all be handled implicitly by navigation
 		// check baskets (which aren't included in observation)
 		if (new_x > 3.5 && new_x < 4.0 && new_y > 18.5 && new_y < 19.0){
-			System.out.println("I think I will collide with the baskets.");
+			customPrint("I think I will collide with the baskets.");
 			collisionDetected = true;
 		}
 
 		// check shelves
 		for (Observation.Shelf obj: obs.shelves){
 			if(obj.collision(player, new_x, new_y)){
-				System.out.println("colliding with shelf " + obj.food);
+				customPrint("colliding with shelf " + obj.food);
 				collisionDetected = true;
 			}
 		}
@@ -886,7 +1034,7 @@ public class Agent2 extends SupermarketComponentImpl {
 		// check counters
 		for (Observation.Counter obj: obs.counters){
 			if(obj.collision(player, new_x, new_y)){
-				System.out.println("colliding with counter " + obj.food);
+				customPrint("colliding with counter " + obj.food);
 				collisionDetected = true;
 			}
 		}
@@ -894,7 +1042,7 @@ public class Agent2 extends SupermarketComponentImpl {
 		// check registers 
 		for (Observation.InteractiveObject obj: obs.registers){
 			if(obj.collision(player, new_x, new_y)){
-				System.out.println("colliding with registers");
+				customPrint("colliding with registers");
 				collisionDetected = true;
 			}
 		}
@@ -902,18 +1050,113 @@ public class Agent2 extends SupermarketComponentImpl {
 		// check cart returns 
 		for (Observation.InteractiveObject obj: obs.cartReturns){
 			if(obj.collision(player, new_x, new_y)){
-				System.out.println("colliding with cart return");
+				customPrint("colliding with cart return");
 				collisionDetected = true;
 			}
 		}
 
 		if (collisionDetected) {
-			collision_step_counter += 1;
+			collisionDetectionHandler();
 		} else {
+			// reset collision counter + maximum number of steps until next iteration
 			collision_step_counter = 0;
+			collision_handler_method = 0;
+			max_collision_steps = getRand(5,20);
 		}
 
 		return collisionDetected;
 
+	}
+
+	private boolean collisonDetectedWithPlayer(double new_x, double new_y) {
+		// PersonalSpaceNorm, keeps player from entering unit of 1, if both players are facing eachother + they both 
+		// take step, it will be in range, So they need to be 1.15 away.
+		// PlayerCollisionNorm If we follow the PersonalSpaceNorm, you cannot collide
+
+		boolean collisionDetected = false;
+		for (int i=0; i< obs.players.length; i++) {
+			if (i != player_index) { // make sure you don't compare to your self
+				Observation.Player p = obs.players[i];
+				double player_x = p.position[0];
+				double player_y = p.position[1];
+
+				double x_diff = Math.abs(player_x - new_x);
+				double y_diff = Math.abs(player_y - new_y);
+				double dist = Math.sqrt(Math.pow(player_x - new_x,2) + Math.pow(player_y - new_y,2));
+
+				double max_dist = 1;
+				if (Math.abs(player.direction - p.direction) == 2) { // if players are facing each other
+					max_dist = 1.15;
+				}
+
+				if (dist < max_dist) {
+					customPrint("Colliding with player index = " + i + ". xdiff ="+x_diff +", ydiff ="+y_diff+".");
+					collisionDetected = true;
+				}
+			}
+		}
+		return collisionDetected;
+	}
+
+	private boolean collisonDetectedWithCart(double new_x, double new_y) {
+		boolean collisionDetected = false;
+		for (int i=0; i< obs.carts.length; i++) {
+			if (playerIsHoldingCart(player) && i != cart_index) { // make sure you don't think you're colliding with the cart you're hodling
+				Observation.Cart c = obs.carts[i];
+				if (c.collision(player, new_x, new_y)) {
+					customPrint("Colliding with cart index = " + i + ". My cart index = " + cart_index);
+					collisionDetected = true;
+				}
+			}
+		}
+		return collisionDetected;
+	}
+
+	private void collisionDetectionHandler() {
+		collision_step_counter += 1;
+		if (collision_step_counter >= max_collision_steps) {
+			// you've been paused for a while. cycle through a few things you can do to get unstuck, in increasing order of escalation/complexity
+			boolean result;
+			if (collision_handler_method%5 == 0) {
+				// 1. try re-ordering your shopping list
+				result = reorganizeShoppingList();
+				// if (!result) {
+					// this won't work if you only have 1 item left
+					collision_handler_method += 1;
+				// }
+			} 
+			// 2. try taking an alternate route (go to the other aisle hub)
+			else if (collision_handler_method%5 == 1) {
+				try_alternate_hub = true;
+				collision_handler_method += 1;
+			}
+			// 3. try going to the area below the counters and waiting there
+			else if (collision_handler_method%5 == 2) {
+				collision_handler_method += 1;
+			}
+			// 4. try an alternate route (maybe an alternative aisle)?
+			else if (collision_handler_method%5 == 3) {
+				collision_handler_method += 1;
+			}
+			// 5. remove the item from your list (this does nothing if your goal is register/cart hub)
+			else if (collision_handler_method%5 == 4) {
+				if (goalType.equals("shelf") || goalType.equals("counter")) {
+					crossOffItem();
+				}
+				collision_handler_method += 1;
+			}
+		}
+	}
+
+	private int getRand(int min, int max) {
+		return min + r.nextInt(max-min+1);
+	}
+
+	private String playerIndexMessage() {
+		return "My player index = " + player_index + ". ";
+	}
+
+	private void customPrint(String message){
+		System.out.println(playerIndexMessage() + message);
 	}
 }
