@@ -85,10 +85,13 @@ public class Agent2 extends SupermarketComponentImpl {
 				shopping_list.set(i, "fresh fish"); 
 			}
 		}
+//		shopping_list.add(0, "garlic");
+//		quantity_list.add(0, 1);
 		quantity_list = new ArrayList<Integer>(Arrays.stream(player.list_quant).boxed().collect(Collectors.toList()));
 		// quantity_list = new ArrayList<Integer>(Arrays.asList(new Integer[] {1}));
 		// quantity_list = new ArrayList<Integer>(Arrays.asList(new Integer[] {1,1,1,1,1}));
 		goal = shopping_list.get(0);
+
 	}
 
 	/**
@@ -473,7 +476,7 @@ public class Agent2 extends SupermarketComponentImpl {
 			goToAnyAisleHub(obs, player);
 		} else {
 			x_target = shelf.position[0] + Math.ceil(shelf.width / 2) - 0.1;
-			y_target = getAisleMidY(getAisleIndex(shelf));
+			y_target = getAisleMidY(getAisleIndex(shelf)) + 0.1;
 			goToLocation(obs, player, x_target, y_target, 0.5, 0.15, false);
 		}
 
@@ -902,7 +905,7 @@ public class Agent2 extends SupermarketComponentImpl {
 		double x = player.position[0];
 		double width = player.width;
 
-		return x >= 4 && x+width <= 5.5;
+		return x >= 3.95 && x+width <= 5.5;
 	}
 
 	private boolean isEastOfEastHub(Observation.Player player) {
@@ -910,7 +913,7 @@ public class Agent2 extends SupermarketComponentImpl {
 	}
 
 	private boolean isWestOfWestHub(Observation.Player player) {
-		return player.position[0] < 4;
+		return player.position[0] < 3.95;
 	}
 
 	private boolean isBetweenRegisters(Observation obs, Observation.Player player) {
